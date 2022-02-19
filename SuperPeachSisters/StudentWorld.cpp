@@ -3,6 +3,17 @@
 #include <string>
 using namespace std;
 
+//GameWorld functions
+//int getLevel() const;
+//int getLives() const;
+//void decLives();
+//void incLives();
+//int getScore() const;
+//void increaseScore(int howMuch);
+//void setGameStatText(string text);
+//bool getKey(int& value);
+//void playSound(int soundID);
+
 GameWorld* createStudentWorld(string assetPath)
 {
 	return new StudentWorld(assetPath);
@@ -24,7 +35,46 @@ int StudentWorld::init()
     //allocate/insert all other actors
     
     //loadlevel of actors
-    
+    Level lev(assetPath());
+    string level_file = "level01.txt";
+    Level::LoadResult result = lev.loadLevel(level_file);
+    if (result == Level::load_fail_file_not_found)
+        cerr << "Could not find level01.txt data file" << endl;
+    else if (result == Level::load_fail_bad_format)
+        cerr << "level01.txt is improperly formatted" << endl;
+    else if (result == Level::load_success)
+    {
+        cerr << "Successfully loaded level" << endl;
+        for(int i = 0; i < GRID_HEIGHT - 1; i++){
+            for(int j = 0; j < GRID_WIDTH; j++){
+                Level::GridEntry ge;
+                ge = lev.getContentsOf(i, j); // x=5, y=10
+                switch (ge){
+                case Level::empty:
+                    break;
+                case Level::koopa:
+                        
+                    break;
+                case Level::goomba:
+                    cout << "Location 5,10 starts with a goomba" << endl;
+                    break;
+                case Level::peach:
+                    cout << "Location 5,10 is where Peach starts" << endl;
+                    break;
+                case Level::flag:
+                    cout << "Location 5,10 is where a flag is" << endl;
+                    break;
+                case Level::block:
+                    cout << "Location 5,10 holds a regular block" << endl;
+                    break;
+                case Level::star_goodie_block:
+                    cout << "Location 5,10 has a star goodie block" << endl;
+                    break;
+                    // etc…
+                }
+            }
+        }
+    }
     
     //initialize number of actors to destroy
     
