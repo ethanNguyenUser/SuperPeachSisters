@@ -16,30 +16,41 @@ public:
     void setDead();
     
     //behavior differentiators
-    virtual bool canMove();
+    virtual bool canMove() const;
+    virtual bool impedes() const;
     
 private:
     bool m_alive;
 };
 
-class MobileActor : public Actor{
+class MobileActor : virtual public Actor{
 public:
-    MobileActor(int imageID, int startX, int startY, int dir, int depth, double size);
-    virtual bool canMove() override;
-    bool willCollide(const Actor& other);
+    virtual bool canMove() const override;
+    virtual bool isImpeded(const Actor& other) = 0;
     
+    //getters and setters
+    bool getImpeded();
+    void setImpeded(bool willCollide);
+    
+    bool collides(int x, int y, int l, int h, int x0, int y0, int l0, int h0);
+
+
 private:
-    bool m_willCollide;
+    bool m_impeded;
 };
 
 class Peach : public MobileActor{
 public:
     Peach(int startX, int startY);
+    virtual ~Peach();
+
     virtual void doSomething() override;
     virtual void bonk() override;
     
+    virtual bool isImpeded(const Actor& other) override;
     void setKey(int key);
     void setKeyIsPressed(bool keyIsPressed);
+    
 private:
     int m_health;
     
@@ -51,7 +62,13 @@ private:
     int m_fBTick;
 };
 
-class Block : public Actor{
+class Obstacle : virtual public Actor{
+public:
+    virtual bool impedes() const override;
+private:
+};
+
+class Block : public Obstacle{
 public:
     Block(int startX, int startY);
     virtual void doSomething();
@@ -59,7 +76,7 @@ public:
 private:
 };
 
-class Pipe : public Actor{
+class Pipe : public Obstacle{
 public:
     Pipe(int startX, int startY);
     virtual void doSomething();

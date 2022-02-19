@@ -101,6 +101,15 @@ int StudentWorld::move(){
     else
         m_peach->setKeyIsPressed(false);
     
+    //check collision for Peach
+    m_peach->setImpeded(false);
+    for(int i = 0; i < m_actors.size(); i++){
+        Actor* actor = m_actors[i];
+        if(actor->impedes() && m_peach->isImpeded(*actor)){
+            m_peach->setImpeded(true);
+        }
+    }
+    
     m_peach->doSomething();
 
     //other Actor actions

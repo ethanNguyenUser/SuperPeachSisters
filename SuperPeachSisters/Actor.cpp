@@ -37,7 +37,12 @@ void Actor::setDead(){
 }
 
 inline
-bool Actor::canMove(){
+bool Actor::canMove() const{
+    return false;
+}
+
+inline
+bool Actor::impedes() const{
     return false;
 }
 
@@ -45,27 +50,41 @@ bool Actor::canMove(){
 ///MobileActor Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-MobileActor::MobileActor(int imageID, int startX, int startY, int dir, int depth, double size) : Actor(imageID, startX, startY, 0, 0, 1.0){
-    
-}
 
-bool MobileActor::canMove(){
+bool MobileActor::canMove() const{
     return true;
 }
 
-bool MobileActor::willCollide(const Actor& other){
-    int x = getX();
-    int y = getY();
-    return false;
+inline
+bool MobileActor::getImpeded(){
+    return m_impeded;
+}
+
+void MobileActor::setImpeded(bool impeded){
+    m_impeded = impeded;
+}
+
+bool MobileActor::collides(int x, int y, int l, int h, int x0, int y0, int l0, int h0){
+    int X = x + l - 1;
+    int Y = y + h - 1;
+    int X0 = x0 + l0 - 1;
+    int Y0 = y0 + h0 - 1;
+        
+    return ((x <= x0 && X >= x0) || (X0 >= x && X0 <= X)) &&
+    ((y <= y0 && Y >= y0) || (Y0 >= y && Y0 <= Y));
 }
 
 //////////////////////////////////////////////////////////////////////////////
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Peach::Peach(int startX, int startY) : MobileActor(IID_PEACH, startX, startY, 0, 0, 1.0){
+Peach::Peach(int startX, int startY) : Actor(IID_PEACH, startX, startY, 0, 0, 1.0){
     m_health = 1;
     m_keyIsPressed = false;
+}
+
+Peach::~Peach(){
+    
 }
 
 void Peach::doSomething(){
@@ -92,15 +111,14 @@ void Peach::doSomething(){
     //check falling
     
     //check keystroke
-    if(m_keyIsPressed){
+    if(m_keyIsPressed && !getImpeded()){
         int x = getX();
         int y = getY();
         switch(m_key){
             case KEY_PRESS_LEFT:
                 setDirection(180);
                 x -= 4;
-//                if(!willCollide())
-                    moveTo(x, y);
+                moveTo(x, y);
                 break;
             case KEY_PRESS_RIGHT:
                 setDirection(0);
@@ -122,12 +140,42 @@ void Peach::bonk(){
     
 }
 
+bool Peach::isImpeded(const Actor &other){
+    int x = getX();
+    int y = getY();
+    if(m_keyIsPressed){
+        switch(m_key){
+            case KEY_PRESS_LEFT:
+                x -= 4;
+                break;
+            case KEY_PRESS_RIGHT:
+                x += 4;
+                break;
+            case KEY_PRESS_UP:
+                y += 4;
+                break;
+            case KEY_PRESS_SPACE:
+                y -= 4;
+                break;
+        }
+    }
+    return collides(x, y, SPRITE_WIDTH, SPRITE_HEIGHT, other.getX(), other.getY(),SPRITE_WIDTH, SPRITE_HEIGHT);
+}
+
 void Peach::setKey(int key){
     m_key = key;
 }
 
 void Peach::setKeyIsPressed(bool keyIsPressed){
     m_keyIsPressed = keyIsPressed;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///Obstacle Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+bool Obstacle::impedes() const{
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
