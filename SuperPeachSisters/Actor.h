@@ -6,32 +6,41 @@
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class Actor: public GraphObject{
 public:
+    Actor(int imageID, int startX, int startY, int dir, int depth, double size);
+    virtual void doSomething() = 0;
+    virtual void bonk() = 0;
+    
+    //getters and setters
+    bool isAlive();
+    void setAlive();
+    void setDead();
     
 private:
+    bool m_alive;
 };
 
 class Peach: public Actor{
 public:
-    
+    Peach(int startX, int startY);
+    virtual void doSomething();
+    virtual void bonk();
+private:
+    int m_health;    
+};
+
+class Block: public Actor{
+public:
+    Block(int startX, int startY);
+    virtual void doSomething();
+    virtual void bonk();
 private:
 };
 
-//Block or pipe
-class Obstacle: public Actor{
+class Pipe: public Actor{
 public:
-    
-private:
-};
-
-class Block: public Obstacle{
-public:
-    
-private:
-};
-
-class Pipe: public Obstacle{
-public:
-    
+    Pipe(int startX, int startY);
+    virtual void doSomething();
+    virtual void bonk();
 private:
 };
 
@@ -48,9 +57,12 @@ public:
 private:
 };
 
-class Flag: public Objective{
+//Change later
+class Flag: public Actor{
 public:
-    
+    Flag(int startX, int startY);
+    virtual void doSomething();
+    virtual void bonk();
 private:
 };
 

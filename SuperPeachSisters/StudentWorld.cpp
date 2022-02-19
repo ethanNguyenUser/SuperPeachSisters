@@ -34,7 +34,7 @@ int StudentWorld::init()
     
     //allocate/insert all other actors
     
-    //loadlevel of actors
+    //use level file to create Actor objects
     Level lev(assetPath());
     string level_file = "level01.txt";
     Level::LoadResult result = lev.loadLevel(level_file);
@@ -45,32 +45,39 @@ int StudentWorld::init()
     else if (result == Level::load_success)
     {
         cerr << "Successfully loaded level" << endl;
-        for(int i = 0; i < GRID_HEIGHT - 1; i++){
-            for(int j = 0; j < GRID_WIDTH; j++){
+        for(int i = 0; i < GRID_WIDTH; i++){
+            for(int j = 0; j < GRID_HEIGHT; j++){
                 Level::GridEntry ge;
-                ge = lev.getContentsOf(i, j); // x=5, y=10
+                ge = lev.getContentsOf(i, j);
                 switch (ge){
-                case Level::empty:
-                    break;
-                case Level::koopa:
-                        
-                    break;
-                case Level::goomba:
-                    cout << "Location 5,10 starts with a goomba" << endl;
-                    break;
-                case Level::peach:
-                    cout << "Location 5,10 is where Peach starts" << endl;
-                    break;
-                case Level::flag:
-                    cout << "Location 5,10 is where a flag is" << endl;
-                    break;
-                case Level::block:
-                    cout << "Location 5,10 holds a regular block" << endl;
-                    break;
-                case Level::star_goodie_block:
-                    cout << "Location 5,10 has a star goodie block" << endl;
-                    break;
-                    // etc…
+                    case Level::empty:
+                        break;
+                    case Level::peach:
+                        actors.push_back(new Peach(i, j));
+                        break;
+                    case Level::block:
+                        actors.push_back(new Block(i, j));
+                        break;
+                    case Level::pipe:
+                        actors.push_back(new Pipe(i, j));
+                        break;
+                    case Level::flag:
+                        actors.push_back(new Flag(i, j));
+                        break;
+                    case Level::mario:
+                        break;
+                    case Level::flower_goodie_block:
+                        break;
+                    case Level::mushroom_goodie_block:
+                        break;
+                    case Level::star_goodie_block:
+                        break;
+                    case Level::goomba:
+                        break;
+                    case Level::koopa:
+                        break;
+                    case Level::piranha:
+                        break;
                 }
             }
         }
@@ -140,9 +147,9 @@ int StudentWorld::move()
 //    update display text // update the score/lives/level text at screen top
 //    // the player hasn’t completed the current level and hasn’t died, so
 //    // continue playing the current level
-//    return GWSTATUS_CONTINUE_GAME;
+    return GWSTATUS_CONTINUE_GAME;
     
-    return GWSTATUS_PLAYER_DIED;
+//    return GWSTATUS_PLAYER_DIED;
 }
 
 void StudentWorld::cleanUp()
