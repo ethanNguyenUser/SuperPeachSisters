@@ -45,6 +45,29 @@ Peach::Peach(int startX, int startY) : Actor(IID_PEACH, startX, startY, 0, 0, 1.
 }
 
 void Peach::doSomething(){
+    //check alive
+    if(!isAlive())
+        return;
+    
+    //check if invincible
+    if(m_invTick > 0)
+        m_invTick--;
+    
+    //check if temporarily invincible
+    if(m_tempInvTick > 0)
+        m_tempInvTick--;
+    
+    //check if in recharge mode
+    if(m_fBTick > 0)
+        m_fBTick--;
+    
+    //check collision
+    
+    //check jump
+    
+    //check falling
+    
+    //check keystroke
     
 }
 

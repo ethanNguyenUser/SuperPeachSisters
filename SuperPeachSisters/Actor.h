@@ -25,7 +25,11 @@ public:
     virtual void doSomething();
     virtual void bonk();
 private:
-    int m_health;    
+    int m_health;
+    
+    int m_invTick;
+    int m_tempInvTick;
+    int m_fBTick;
 };
 
 class Block: public Actor{

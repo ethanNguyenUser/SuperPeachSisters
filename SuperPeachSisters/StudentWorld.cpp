@@ -26,8 +26,7 @@ StudentWorld::StudentWorld(string assetPath)
 {
 }
 
-int StudentWorld::init()
-{
+int StudentWorld::init(){
     //initialize data structures of actors
     
     //allocate/insert Peach, no powers in right location
@@ -90,8 +89,7 @@ int StudentWorld::init()
     return GWSTATUS_CONTINUE_GAME;
 }
 
-int StudentWorld::move()
-{
+int StudentWorld::move(){
 //    // This code is here merely to allow the game to build, run, and terminate after you hit enter.
 //    // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
 //    decLives();
@@ -118,19 +116,17 @@ int StudentWorld::move()
     
     
     
-//    // The term "actors" refers to all actors, e.g., Peach, goodies,
-//    // enemies, flags, blocks, pipes, fireballs, etc.
-//    // Give each actor a chance to do something, incl. Peach
-//    for each of the actors in the game world
-//    {
-//        if (that actor is still active/alive)
-//        {
-//            // tell that actor to do something (e.g. move)
-//            that actor -> doSomething();
-//            if (Peach died during this tick) {
-//                play dying sound
-//                return GWSTATUS_PLAYER_DIED;
-//            }
+    // The term "actors" refers to all actors, e.g., Peach, goodies,
+    // enemies, flags, blocks, pipes, fireballs, etc.
+    // Give each actor a chance to do something, incl. Peach
+    for(int i = 0; i < actors.size(); i++){
+        if (actors[i]->isAlive()){
+            // tell that actor to do something (e.g. move)
+            actors[i]->doSomething();
+            if (!actors[0]->isAlive()) {
+                playSound(SOUND_PLAYER_DIE);
+                return GWSTATUS_PLAYER_DIED;
+            }
 //            if (Peach reached Mario) {
 //                play game over sound
 //                return GWSTATUS_WON_GAME;
@@ -139,10 +135,15 @@ int StudentWorld::move()
 //                play completed level sound
 //                return GWSTATUS_FINISHED_LEVEL;
 //            }
-//        }
-//    }
-//    // Remove newly-dead actors after each tick
-//    remove dead game objects
+        }
+    }
+    // Remove newly-dead actors after each tick
+    for(int i = 0; i < actors.size(); i++){
+        if(!actors[i]->isAlive()){
+            delete actors[i];
+            actors.erase(actors.begin() + i);
+        }
+    }
 //    // Update the game status line
 //    update display text // update the score/lives/level text at screen top
 //    // the player hasn’t completed the current level and hasn’t died, so
