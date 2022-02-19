@@ -17,8 +17,11 @@ public:
     virtual int move();
     virtual void cleanUp();
     
+    
+        
 private:
-    std::vector<Actor*> actors;
+    std::vector<Actor*> m_actors;
+    Peach* m_peach;
 };
 
 #endif // STUDENTWORLD_H_

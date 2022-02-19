@@ -21,10 +21,7 @@ GameWorld* createStudentWorld(string assetPath)
 
 // Students:  Add code to this file, StudentWorld.h, Actor.h, and Actor.cpp
 
-StudentWorld::StudentWorld(string assetPath)
-: GameWorld(assetPath)
-{
-}
+StudentWorld::StudentWorld(string assetPath) : GameWorld(assetPath){}
 
 int StudentWorld::init(){
     //initialize data structures of actors
@@ -52,16 +49,16 @@ int StudentWorld::init(){
                     case Level::empty:
                         break;
                     case Level::peach:
-                        actors.push_back(new Peach(i, j));
+                        m_peach = new Peach(i, j);
                         break;
                     case Level::block:
-                        actors.push_back(new Block(i, j));
+                        m_actors.push_back(new Block(i, j));
                         break;
                     case Level::pipe:
-                        actors.push_back(new Pipe(i, j));
+                        m_actors.push_back(new Pipe(i, j));
                         break;
                     case Level::flag:
-                        actors.push_back(new Flag(i, j));
+                        m_actors.push_back(new Flag(i, j));
                         break;
                     case Level::mario:
                         break;
@@ -90,40 +87,30 @@ int StudentWorld::init(){
 }
 
 int StudentWorld::move(){
-//    // This code is here merely to allow the game to build, run, and terminate after you hit enter.
-//    // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-//    decLives();
-//
-//    //doSomething() for all actors
-//    //  if doSomething() for actor kills Peach
-//    //      play SOUND_PLAYER_DIE using playSound()
-//    //      return GWSTATUS_PLAYER_DIED
-//
-//    //if Peach reaches flag
-//    //  play SOUND_FINISHED_LEVEL using playSound()
-//    //  return GWSTATUS_PLAYER_DIED
-//
-//    //if Peach reaches Mario
-//    //  play SOUND_GAME_OVER using playSound()
-//    //  return GWSTATUS_PLAYER_WON
-//
-//    //delete dead actors
-//
-//    //update statusText using setGameStatText()
-//
-//    //continue on if nothing else has happened
-//    return GWSTATUS_CONTINUE_GAME;
-    
-    
-    
     // The term "actors" refers to all actors, e.g., Peach, goodies,
     // enemies, flags, blocks, pipes, fireballs, etc.
     // Give each actor a chance to do something, incl. Peach
-    for(int i = 0; i < actors.size(); i++){
-        if (actors[i]->isAlive()){
+    
+    //Peach actions
+    //get keystroke
+    int key;
+    if(getKey(key)){
+        m_peach->setKeyIsPressed(true);
+        m_peach->setKey(key);
+    }
+    else
+        m_peach->setKeyIsPressed(false);
+    
+    m_peach->doSomething();
+
+    //other Actor actions
+    for(int i = 0; i < m_actors.size(); i++){
+        Actor* actor = m_actors[i];
+        if (actor->isAlive()){
             // tell that actor to do something (e.g. move)
-            actors[i]->doSomething();
-            if (!actors[0]->isAlive()) {
+            m_actors[i]->doSomething();
+            
+            if(!m_peach->isAlive()){
                 playSound(SOUND_PLAYER_DIE);
                 return GWSTATUS_PLAYER_DIED;
             }
@@ -138,10 +125,10 @@ int StudentWorld::move(){
         }
     }
     // Remove newly-dead actors after each tick
-    for(int i = 0; i < actors.size(); i++){
-        if(!actors[i]->isAlive()){
-            delete actors[i];
-            actors.erase(actors.begin() + i);
+    for(int i = 0; i < m_actors.size(); i++){
+        if(!m_actors[i]->isAlive()){
+            delete m_actors[i];
+            m_actors.erase(m_actors.begin() + i);
         }
     }
 //    // Update the game status line

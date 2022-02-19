@@ -36,12 +36,36 @@ void Actor::setDead(){
     m_alive = false;
 }
 
+inline
+bool Actor::canMove(){
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///MobileActor Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+MobileActor::MobileActor(int imageID, int startX, int startY, int dir, int depth, double size) : Actor(imageID, startX, startY, 0, 0, 1.0){
+    
+}
+
+bool MobileActor::canMove(){
+    return true;
+}
+
+bool MobileActor::willCollide(const Actor& other){
+    int x = getX();
+    int y = getY();
+    return false;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Peach::Peach(int startX, int startY) : Actor(IID_PEACH, startX, startY, 0, 0, 1.0){
+Peach::Peach(int startX, int startY) : MobileActor(IID_PEACH, startX, startY, 0, 0, 1.0){
     m_health = 1;
+    m_keyIsPressed = false;
 }
 
 void Peach::doSomething(){
@@ -68,11 +92,42 @@ void Peach::doSomething(){
     //check falling
     
     //check keystroke
-    
+    if(m_keyIsPressed){
+        int x = getX();
+        int y = getY();
+        switch(m_key){
+            case KEY_PRESS_LEFT:
+                setDirection(180);
+                x -= 4;
+//                if(!willCollide())
+                    moveTo(x, y);
+                break;
+            case KEY_PRESS_RIGHT:
+                setDirection(0);
+                x += 4;
+                moveTo(x, y);
+                break;
+            case KEY_PRESS_UP:
+                y += 4;
+                moveTo(x, y);
+                break;
+            case KEY_PRESS_SPACE:
+                moveTo(getX(), getY() - 4);
+                break;
+        }
+    }
 }
 
 void Peach::bonk(){
     
+}
+
+void Peach::setKey(int key){
+    m_key = key;
+}
+
+void Peach::setKeyIsPressed(bool keyIsPressed){
+    m_keyIsPressed = keyIsPressed;
 }
 
 //////////////////////////////////////////////////////////////////////////////
