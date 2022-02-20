@@ -17,7 +17,7 @@
 ///Actor Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Actor::Actor(int imageID, int startX, int startY, int dir, int depth, double size, StudentWorld* sWP) : GraphObject(imageID, startX * VIEW_WIDTH / GRID_WIDTH, startY * VIEW_HEIGHT / GRID_HEIGHT, dir, depth, size){
+Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth, double size) : GraphObject(imageID, startX * VIEW_WIDTH / GRID_WIDTH, startY * VIEW_HEIGHT / GRID_HEIGHT, dir, depth, size){
     m_sWP = sWP;
     m_alive = true;
 }
@@ -74,7 +74,7 @@ bool MobileActor::canMove() const{
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, 0, 0, 1.0, sWP){
+Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP, 0, 0){
     m_health = 1;
 }
 
@@ -154,7 +154,7 @@ bool Obstacle::impedes() const{
 ///Block Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, startX, startY, 0, 2, 1.0, sWP){
+Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, startX, startY, sWP, 0, 2){
     m_wasBonked = false;
 }
 
@@ -172,7 +172,7 @@ void Block::bonk(){
 //////////////////////////////////////////////////////////////////////////////
 
 
-Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Actor(IID_PIPE, startX, startY, 0, 2, 1.0, sWP){}
+Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Actor(IID_PIPE, startX, startY, sWP, 0, 2){}
 
 void Pipe::bonk(){
     
@@ -183,7 +183,7 @@ void Pipe::bonk(){
 ///Flag Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Flag::Flag(int startX, int startY, StudentWorld* sWP) : Actor(IID_FLAG, startX, startY, 0, 2, 1.0, sWP){}
+Flag::Flag(int startX, int startY, StudentWorld* sWP) : Actor(IID_FLAG, startX, startY, sWP, 0, 2){}
 
 void Flag::doSomething(){
     

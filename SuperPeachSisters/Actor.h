@@ -9,7 +9,7 @@ class StudentWorld;
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class Actor : public GraphObject{
 public:
-    Actor(int imageID, int startX, int startY, int dir, int depth, double size, StudentWorld* studentWorldPtr);
+    Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth, double size = 1);
     virtual void doSomething() = 0;
     virtual void bonk() = 0;
     
