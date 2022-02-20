@@ -28,7 +28,7 @@ StudentWorld* Actor::sWP() const{
 }
 
 inline
-bool Actor::isAlive(){
+bool Actor::isAlive() const{
     return m_alive;
 }
 
@@ -120,12 +120,12 @@ void Peach::doSomething(){
                 setDirection(0);
                 x += 4;
                 break;
-//            case KEY_PRESS_UP:
-//                y += 4;
-//                break;
-//            case KEY_PRESS_SPACE:
-//                y -= 4;
-//                break;
+            case KEY_PRESS_UP:
+                y += 4;
+                break;
+            case KEY_PRESS_SPACE:
+                y -= 4;
+                break;
         }
         bool isImpeded = sWP()->bonkCollidedObjects(x, y);
         if(!isImpeded)
@@ -144,6 +144,8 @@ void Peach::bonk(){
 ///Obstacle Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+void Obstacle::doSomething(){}
+
 bool Obstacle::impedes() const{
     return true;
 }
@@ -152,14 +154,16 @@ bool Obstacle::impedes() const{
 ///Block Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, startX, startY, 0, 2, 1.0, sWP){}
-
-void Block::doSomething(){
-    
+Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, startX, startY, 0, 2, 1.0, sWP){
+    m_wasBonked = false;
 }
 
 void Block::bonk(){
+    sWP()->playSound(SOUND_PLAYER_BONK);
     
+    if(!m_wasBonked){
+        m_wasBonked = true;
+    }
 }
 
 
@@ -169,10 +173,6 @@ void Block::bonk(){
 
 
 Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Actor(IID_PIPE, startX, startY, 0, 2, 1.0, sWP){}
-
-void Pipe::doSomething(){
-    
-}
 
 void Pipe::bonk(){
     

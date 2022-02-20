@@ -15,7 +15,7 @@ public:
     
     //getters and setters
     StudentWorld* sWP() const;
-    bool isAlive();
+    bool isAlive() const;
     void setAlive();
     void setDead();
     
@@ -54,21 +54,21 @@ private:
 class Obstacle : virtual public Actor{
 public:
     virtual bool impedes() const override;
+    virtual void doSomething() override;
 private:
 };
 
 class Block : public Obstacle{
 public:
     Block(int startX, int startY, StudentWorld* sWP);
-    virtual void doSomething();
     virtual void bonk();
 private:
+    bool m_wasBonked;
 };
 
 class Pipe : public Obstacle{
 public:
     Pipe(int startX, int startY, StudentWorld* sWP);
-    virtual void doSomething();
     virtual void bonk();
 private:
 };
@@ -89,12 +89,6 @@ private:
 };
 
 class Mario: public Objective{
-public:
-    
-private:
-};
-
-class Enemy : public Actor{
 public:
     
 private:
@@ -124,19 +118,13 @@ public:
 private:
 };
 
-class Weapon : public Actor{
+class PiranhaFireball : public MobileActor{
 public:
     
 private:
 };
 
-class PeachWeapon : public Weapon{
-public:
-    
-private:
-};
-
-class PiranhaFireball : public Weapon{
+class PeachWeapon : public MobileActor{
 public:
     
 private:
@@ -154,19 +142,19 @@ public:
 private:
 };
 
-class MobileEnemy : public Enemy{
+class Enemy : public Actor{
 public:
     
 private:
 };
 
-class Goomba : public MobileEnemy{
+class Goomba : virtual public MobileActor, virtual public Enemy{
 public:
     
 private:
 };
 
-class Koopa : public MobileEnemy{
+class Koopa : virtual public MobileActor, virtual public Enemy{
 public:
     
 private:
