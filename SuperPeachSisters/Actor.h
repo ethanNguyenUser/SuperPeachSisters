@@ -85,24 +85,23 @@ private:
 };
 
 //Mario or Flag
-class Objective: public Actor{
+class Objective: virtual public Actor{
 public:
     
+private:
+};
+
+class Flag : public Objective{
+public:
+    Flag(int startX, int startY);
+    virtual void doSomething();
+    virtual void bonk();
 private:
 };
 
 class Mario: public Objective{
 public:
     
-private:
-};
-
-//Change later
-class Flag : public Actor{
-public:
-    Flag(int startX, int startY);
-    virtual void doSomething();
-    virtual void bonk();
 private:
 };
 

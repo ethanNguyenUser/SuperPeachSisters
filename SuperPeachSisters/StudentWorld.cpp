@@ -14,14 +14,17 @@ using namespace std;
 //bool getKey(int& value);
 //void playSound(int soundID);
 
-GameWorld* createStudentWorld(string assetPath)
-{
+GameWorld* createStudentWorld(string assetPath){
 	return new StudentWorld(assetPath);
 }
 
 // Students:  Add code to this file, StudentWorld.h, Actor.h, and Actor.cpp
 
 StudentWorld::StudentWorld(string assetPath) : GameWorld(assetPath){}
+
+StudentWorld::~StudentWorld(){
+    cleanUp();
+}
 
 int StudentWorld::init(){
     //initialize data structures of actors
@@ -38,8 +41,7 @@ int StudentWorld::init(){
         cerr << "Could not find level01.txt data file" << endl;
     else if (result == Level::load_fail_bad_format)
         cerr << "level01.txt is improperly formatted" << endl;
-    else if (result == Level::load_success)
-    {
+    else if (result == Level::load_success){
         cerr << "Successfully loaded level" << endl;
         for(int i = 0; i < GRID_WIDTH; i++){
             for(int j = 0; j < GRID_HEIGHT; j++){
@@ -107,6 +109,7 @@ int StudentWorld::move(){
         Actor* actor = m_actors[i];
         if(actor->impedes() && m_peach->isImpeded(*actor)){
             m_peach->setImpeded(true);
+            actor->bonk();
         }
     }
     
@@ -133,6 +136,7 @@ int StudentWorld::move(){
 //            }
         }
     }
+    
     // Remove newly-dead actors after each tick
     for(int i = 0; i < m_actors.size(); i++){
         if(!m_actors[i]->isAlive()){
@@ -152,5 +156,9 @@ int StudentWorld::move(){
 void StudentWorld::cleanUp()
 {
     decLives();
-    //delete all actors
+    delete m_peach;
+    for(int i = 0; i < m_actors.size(); i++){
+        delete m_actors[i];
+    }
+    m_actors.clear();
 }
