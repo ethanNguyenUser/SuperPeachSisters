@@ -1,6 +1,8 @@
 #include "StudentWorld.h"
 #include "GameConstants.h"
 #include <string>
+#include <sstream>
+#include <iomanip>
 using namespace std;
 
 //GameWorld functions
@@ -27,22 +29,27 @@ StudentWorld::~StudentWorld(){
 }
 
 int StudentWorld::init(){
-    //initialize data structures of actors
-    
-    //allocate/insert Peach, no powers in right location
-    
-    //allocate/insert all other actors
-    
     //use level file to create Actor objects
     Level lev(assetPath());
-    string level_file = "level01.txt";
+    ostringstream oss;
+    oss << "level";
+    oss.fill('0');
+    oss << setw(2) << getLevel();
+    oss << ".txt";
+    string level_file = oss.str();
     Level::LoadResult result = lev.loadLevel(level_file);
-    if (result == Level::load_fail_file_not_found)
-        cerr << "Could not find level01.txt data file" << endl;
-    else if (result == Level::load_fail_bad_format)
-        cerr << "level01.txt is improperly formatted" << endl;
+    if (result == Level::load_fail_file_not_found){
+        cerr << "Could not find " << level_file << " data file" << endl;
+        return GWSTATUS_LEVEL_ERROR;
+    }
+    else if (result == Level::load_fail_bad_format){
+        cerr << level_file << " is improperly formatted" << endl;
+        return GWSTATUS_LEVEL_ERROR;
+    }
     else if (result == Level::load_success){
         cerr << "Successfully loaded level" << endl;
+        
+        //run through level object grid
         for(int i = 0; i < GRID_WIDTH; i++){
             for(int j = 0; j < GRID_HEIGHT; j++){
                 Level::GridEntry ge;
@@ -51,16 +58,16 @@ int StudentWorld::init(){
                     case Level::empty:
                         break;
                     case Level::peach:
-                        m_peach = new Peach(i, j);
+                        m_peach = new Peach(i, j, this);
                         break;
                     case Level::block:
-                        m_actors.push_back(new Block(i, j));
+                        m_actors.push_back(new Block(i, j, this));
                         break;
                     case Level::pipe:
-                        m_actors.push_back(new Pipe(i, j));
+                        m_actors.push_back(new Pipe(i, j, this));
                         break;
                     case Level::flag:
-                        m_actors.push_back(new Flag(i, j));
+                        m_actors.push_back(new Flag(i, j, this));
                         break;
                     case Level::mario:
                         break;
@@ -80,11 +87,7 @@ int StudentWorld::init(){
             }
         }
     }
-    
-    //initialize number of actors to destroy
-    
-    //return GWSTATUS_LEVEL_ERROR if no level data file exists or file is improperly formatted
-        
+            
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -92,29 +95,7 @@ int StudentWorld::move(){
     // The term "actors" refers to all actors, e.g., Peach, goodies,
     // enemies, flags, blocks, pipes, fireballs, etc.
     // Give each actor a chance to do something, incl. Peach
-    
-    //Peach actions
-    //get keystroke
-    int key;
-    if(getKey(key)){
-        m_peach->setKeyIsPressed(true);
-        m_peach->setKey(key);
-    }
-    else
-        m_peach->setKeyIsPressed(false);
-    
-    //check collision for Peach
-    m_peach->setImpeded(false);
-    for(int i = 0; i < m_actors.size(); i++){
-        Actor* actor = m_actors[i];
-        if(actor->impedes() && m_peach->isImpeded(*actor)){
-            m_peach->setImpeded(true);
-            actor->bonk();
-        }
-    }
-    
-    m_peach->doSomething();
-
+   
     //other Actor actions
     for(int i = 0; i < m_actors.size(); i++){
         Actor* actor = m_actors[i];
@@ -137,6 +118,8 @@ int StudentWorld::move(){
         }
     }
     
+    m_peach->doSomething();
+
     // Remove newly-dead actors after each tick
     for(int i = 0; i < m_actors.size(); i++){
         if(!m_actors[i]->isAlive()){
@@ -161,4 +144,17 @@ void StudentWorld::cleanUp()
         delete m_actors[i];
     }
     m_actors.clear();
+}
+
+//returns true ifthe object impedes
+bool StudentWorld::bonkCollidedObjects(int x, int y){
+    for(int i = 0; i < m_actors.size(); i++){
+        Actor* other = m_actors[i];
+        if(other->collides(other->getX(), other->getY(), x, y)){
+            other->bonk();
+            if(other->impedes())
+                return true;
+        }
+    }
+    return false;
 }

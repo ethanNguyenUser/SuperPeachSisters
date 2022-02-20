@@ -2,15 +2,19 @@
 #define ACTOR_H_
 
 #include "GraphObject.h"
+#include "StudentWorld.h"
+
+class StudentWorld;
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class Actor : public GraphObject{
 public:
-    Actor(int imageID, int startX, int startY, int dir, int depth, double size);
+    Actor(int imageID, int startX, int startY, int dir, int depth, double size, StudentWorld* studentWorldPtr);
     virtual void doSomething() = 0;
     virtual void bonk() = 0;
     
     //getters and setters
+    StudentWorld* sWP() const;
     bool isAlive();
     void setAlive();
     void setDead();
@@ -19,43 +23,28 @@ public:
     virtual bool canMove() const;
     virtual bool impedes() const;
     
+    bool collides(int x, int y, int x0, int y0);
+    
 private:
+    StudentWorld* m_sWP;
     bool m_alive;
 };
 
 class MobileActor : virtual public Actor{
 public:
     virtual bool canMove() const override;
-    virtual bool isImpeded(const Actor& other) = 0;
-    
-    //getters and setters
-    bool getImpeded();
-    void setImpeded(bool willCollide);
-    
-    bool collides(int x, int y, int l, int h, int x0, int y0, int l0, int h0);
-
-
-private:
-    bool m_impeded;
 };
 
 class Peach : public MobileActor{
 public:
-    Peach(int startX, int startY);
+    Peach(int startX, int startY, StudentWorld* sWP);
     virtual ~Peach();
 
     virtual void doSomething() override;
     virtual void bonk() override;
     
-    virtual bool isImpeded(const Actor& other) override;
-    void setKey(int key);
-    void setKeyIsPressed(bool keyIsPressed);
-    
 private:
     int m_health;
-    
-    int m_key;
-    bool m_keyIsPressed;
     
     int m_invTick;
     int m_tempInvTick;
@@ -70,7 +59,7 @@ private:
 
 class Block : public Obstacle{
 public:
-    Block(int startX, int startY);
+    Block(int startX, int startY, StudentWorld* sWP);
     virtual void doSomething();
     virtual void bonk();
 private:
@@ -78,7 +67,7 @@ private:
 
 class Pipe : public Obstacle{
 public:
-    Pipe(int startX, int startY);
+    Pipe(int startX, int startY, StudentWorld* sWP);
     virtual void doSomething();
     virtual void bonk();
 private:
@@ -87,13 +76,13 @@ private:
 //Mario or Flag
 class Objective: virtual public Actor{
 public:
-    
+//    virtual void bonk();
 private:
 };
 
 class Flag : public Objective{
 public:
-    Flag(int startX, int startY);
+    Flag(int startX, int startY, StudentWorld* sWP);
     virtual void doSomething();
     virtual void bonk();
 private:

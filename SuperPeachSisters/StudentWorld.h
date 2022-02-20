@@ -9,6 +9,9 @@
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
+class Actor;
+class Peach;
+
 class StudentWorld : public GameWorld
 {
 public:
@@ -18,8 +21,8 @@ public:
     virtual int move();
     virtual void cleanUp();
     
+    bool bonkCollidedObjects(int x, int y);
     
-        
 private:
     std::vector<Actor*> m_actors;
     Peach* m_peach;
