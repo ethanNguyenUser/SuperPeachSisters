@@ -21,7 +21,7 @@ public:
     virtual int move();
     virtual void cleanUp();
     
-    bool bonkCollidedObjects(int x, int y);
+    bool checkCollision(int x, int y, Actor* actor);
     
 private:
     std::vector<Actor*> m_actors;

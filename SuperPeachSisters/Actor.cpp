@@ -52,6 +52,11 @@ bool Actor::impedes() const{
     return false;
 }
 
+inline
+bool Actor::damageable() const{
+    return false;
+}
+
 bool Actor::collides(int x, int y, int x0, int y0){
     int X = x + SPRITE_WIDTH - 1;
     int Y = y + SPRITE_HEIGHT - 1;
@@ -60,6 +65,14 @@ bool Actor::collides(int x, int y, int x0, int y0){
         
     return ((x <= x0 && X >= x0) || (X0 >= x && X0 <= X)) &&
     ((y <= y0 && Y >= y0) || (Y0 >= y && Y0 <= Y));
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///DamageableActor Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+bool DamageableActor::damageable() const{
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -100,7 +113,7 @@ void Peach::doSomething(){
         m_fBTick--;
     
     //check collision
-    sWP()->bonkCollidedObjects(getX(), getY());
+    sWP()->checkCollision(getX(), getY(), this);
 
     //check jump
     
@@ -120,18 +133,16 @@ void Peach::doSomething(){
                 setDirection(0);
                 x += 4;
                 break;
-            case KEY_PRESS_UP:
-                y += 4;
-                break;
-            case KEY_PRESS_SPACE:
-                y -= 4;
-                break;
+//            case KEY_PRESS_UP:
+//                y += 4;
+//                break;
+//            case KEY_PRESS_SPACE:
+//                y -= 4;
+//                break;
         }
-        bool isImpeded = sWP()->bonkCollidedObjects(x, y);
+        bool isImpeded = sWP()->checkCollision(x, y, this);
         if(!isImpeded)
             moveTo(x, y);
-        else
-            sWP()->playSound(SOUND_PLAYER_BONK);
     }
     
 }
@@ -175,7 +186,6 @@ void Block::bonk(){
 Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Actor(IID_PIPE, startX, startY, sWP, 0, 2){}
 
 void Pipe::bonk(){
-    
 }
 
 

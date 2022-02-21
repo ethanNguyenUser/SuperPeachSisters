@@ -147,10 +147,10 @@ void StudentWorld::cleanUp()
 }
 
 //returns true ifthe object impedes
-bool StudentWorld::bonkCollidedObjects(int x, int y){
+bool StudentWorld::checkCollision(int x, int y, Actor* actor){
     for(int i = 0; i < m_actors.size(); i++){
         Actor* other = m_actors[i];
-        if(other->collides(other->getX(), other->getY(), x, y)){
+        if(actor->collides(x, y, other->getX(), other->getY())){
             other->bonk();
             if(other->impedes())
                 return true;

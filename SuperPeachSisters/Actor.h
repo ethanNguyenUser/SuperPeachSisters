@@ -22,6 +22,7 @@ public:
     //behavior differentiators
     virtual bool canMove() const;
     virtual bool impedes() const;
+    virtual bool damageable() const;
     
     bool collides(int x, int y, int x0, int y0);
     
@@ -30,12 +31,17 @@ private:
     bool m_alive;
 };
 
+class DamageableActor : virtual public Actor{
+public:
+    virtual bool damageable() const override;
+};
+
 class MobileActor : virtual public Actor{
 public:
     virtual bool canMove() const override;
 };
 
-class Peach : public MobileActor{
+class Peach : virtual public DamageableActor, virtual public MobileActor{
 public:
     Peach(int startX, int startY, StudentWorld* sWP);
     virtual ~Peach();
@@ -142,7 +148,7 @@ public:
 private:
 };
 
-class Enemy : public Actor{
+class Enemy : public DamageableActor{
 public:
     
 private:
