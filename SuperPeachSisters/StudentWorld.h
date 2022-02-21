@@ -22,6 +22,8 @@ public:
     virtual void cleanUp();
     
     bool checkCollision(int x, int y, Actor* actor);
+    bool checkCollisionFalling(int x, int y, Actor* actor);
+
     
 private:
     std::vector<Actor*> m_actors;

@@ -62,9 +62,12 @@ bool Actor::collides(int x, int y, int x0, int y0){
     int Y = y + SPRITE_HEIGHT - 1;
     int X0 = x0 + SPRITE_WIDTH - 1;
     int Y0 = y0 + SPRITE_HEIGHT - 1;
-        
-    return ((x <= x0 && X >= x0) || (X0 >= x && X0 <= X)) &&
-    ((y <= y0 && Y >= y0) || (Y0 >= y && Y0 <= Y));
+//
+//    return ((x <= x0 && X >= x0) || (X0 >= x && X0 <= X)) &&
+//    ((y <= y0 && Y >= y0) || (Y0 >= y && Y0 <= Y));
+    
+    return (x <= X0 && X >= x0 && y <= Y0 && Y >= y0);
+    
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -87,7 +90,7 @@ bool MobileActor::canMove() const{
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP, 0, 0){
+Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP, 4, 0){
     m_health = 1;
 }
 
@@ -115,15 +118,35 @@ void Peach::doSomething(){
     //check collision
     sWP()->checkCollision(getX(), getY(), this);
 
+    int x = getX();
+    int y = getY();
+    
     //check jump
+    if(m_remainingJumpDistance > 0){
+        x = getX();
+        y = getY() + 4;
+        if(sWP()->checkCollision(x, y, this))
+            m_remainingJumpDistance = 0;
+        else{
+            moveTo(x, y);
+            m_remainingJumpDistance--;
+        }
+    }
     
     //check falling
+    else if(m_remainingJumpDistance == 0){
+        x = getX();
+        y = getY() - 4;
+        if(!sWP()->checkCollisionFalling(x, y, this))
+            moveTo(x, y);
+    }
+
     
     //check keystroke
     int key;
     if(sWP()->getKey(key)){
-        int x = getX();
-        int y = getY();
+        x = getX();
+        y = getY();
         bool isMoved = false;
         switch(key){
             case KEY_PRESS_LEFT:
@@ -143,10 +166,12 @@ void Peach::doSomething(){
 //                y -= 4;
 //                break;
             case KEY_PRESS_UP:
-                y += 4;
+                m_remainingJumpDistance = 8;
+                isMoved = true;
                 break;
             case KEY_PRESS_SPACE:
                 y -= 4;
+                isMoved = true;
                 break;
         }
         bool isImpeded = sWP()->checkCollision(x, y, this);
@@ -157,7 +182,8 @@ void Peach::doSomething(){
 }
 
 void Peach::bonk(){
-    
+    if(true)
+        true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -180,7 +206,7 @@ Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, start
 
 void Block::bonk(){
     sWP()->playSound(SOUND_PLAYER_BONK);
-    
+    std::cerr << "bonk" << std::endl;
     if(!m_wasBonked){
         m_wasBonked = true;
     }

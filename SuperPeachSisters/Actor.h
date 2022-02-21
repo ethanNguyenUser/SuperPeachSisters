@@ -55,6 +55,7 @@ private:
     int m_invTick;
     int m_tempInvTick;
     int m_fBTick;
+    int m_remainingJumpDistance;
 };
 
 class Obstacle : virtual public Actor{

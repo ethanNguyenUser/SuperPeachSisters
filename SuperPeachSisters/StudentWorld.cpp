@@ -158,3 +158,15 @@ bool StudentWorld::checkCollision(int x, int y, Actor* actor){
     }
     return false;
 }
+
+//returns true ifthe object impedes
+bool StudentWorld::checkCollisionFalling(int x, int y, Actor* actor){
+    for(int i = 0; i < m_actors.size(); i++){
+        Actor* other = m_actors[i];
+        if(actor->collides(x, y, other->getX(), other->getY())){
+            if(other->impedes())
+                return true;
+        }
+    }
+    return false;
+}
