@@ -124,13 +124,16 @@ void Peach::doSomething(){
     if(sWP()->getKey(key)){
         int x = getX();
         int y = getY();
+        bool isMoved = false;
         switch(key){
             case KEY_PRESS_LEFT:
                 setDirection(180);
                 x -= 4;
+                isMoved = true;
                 break;
             case KEY_PRESS_RIGHT:
                 setDirection(0);
+                isMoved = true;
                 x += 4;
                 break;
 //            case KEY_PRESS_UP:
@@ -139,9 +142,15 @@ void Peach::doSomething(){
 //            case KEY_PRESS_SPACE:
 //                y -= 4;
 //                break;
+            case KEY_PRESS_UP:
+                y += 4;
+                break;
+            case KEY_PRESS_SPACE:
+                y -= 4;
+                break;
         }
         bool isImpeded = sWP()->checkCollision(x, y, this);
-        if(!isImpeded)
+        if(!isImpeded && isMoved)
             moveTo(x, y);
     }
     
@@ -176,7 +185,7 @@ void Block::bonk(){
         m_wasBonked = true;
     }
 }
-
+    
 
 //////////////////////////////////////////////////////////////////////////////
 ///Pipe Implementation
