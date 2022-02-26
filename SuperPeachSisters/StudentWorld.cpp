@@ -61,21 +61,25 @@ int StudentWorld::init(){
                         m_peach = new Peach(i, j, this);
                         break;
                     case Level::block:
-                        m_actors.push_back(new Block(i, j, this));
+                        m_actors.push_back(new Block(i, j, this, Block::none));
                         break;
                     case Level::pipe:
                         m_actors.push_back(new Pipe(i, j, this));
                         break;
                     case Level::flag:
-                        m_actors.push_back(new Flag(i, j, this));
+                        m_actors.push_back(new Objective(i, j, this, false));
                         break;
                     case Level::mario:
+                        m_actors.push_back(new Objective(i, j, this, true));
                         break;
                     case Level::flower_goodie_block:
+                        m_actors.push_back(new Block(i, j, this, Block::flower));
                         break;
                     case Level::mushroom_goodie_block:
+                        m_actors.push_back(new Block(i, j, this, Block::mushroom));
                         break;
                     case Level::star_goodie_block:
+                        m_actors.push_back(new Block(i, j, this, Block::star));
                         break;
                     case Level::goomba:
                         break;

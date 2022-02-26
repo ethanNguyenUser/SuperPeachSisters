@@ -17,10 +17,26 @@
 ///Actor Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth, double size) : GraphObject(imageID, startX * VIEW_WIDTH / GRID_WIDTH, startY * VIEW_HEIGHT / GRID_HEIGHT, dir, depth, size){
+Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth) : GraphObject(imageID, startX * VIEW_WIDTH / GRID_WIDTH, startY * VIEW_HEIGHT / GRID_HEIGHT, dir, depth, 1){
     m_sWP = sWP;
     m_alive = true;
 }
+
+inline
+void Actor::doSomething(){
+//    if (m_alive)
+//        doSomethingAux();
+}
+
+// Bonk this actor.  Parameter says whether bonker is Peach with invincibiity.
+//inline
+inline
+void Actor::getBonked(bool bonkerIsInvinciblePeach){
+    //TODO: Finish
+}
+
+inline
+void Actor::bonk(){}
 
 inline
 StudentWorld* Actor::sWP() const{
@@ -30,11 +46,6 @@ StudentWorld* Actor::sWP() const{
 inline
 bool Actor::isAlive() const{
     return m_alive;
-}
-
-inline
-void Actor::setAlive(){
-    m_alive = true;
 }
 
 inline
@@ -57,6 +68,18 @@ bool Actor::damageable() const{
     return false;
 }
 
+// Do what the spec says happens when damage is inflicted on this actor.
+inline
+void Actor::sufferDamageIfDamageable(){
+    //TODO: Finish
+}
+
+// Fall the indicated distance if not blocked.
+inline
+void Actor::fallIfPossible(int dist){
+    //TODO: Finish
+}
+
 bool Actor::collides(int x, int y, int x0, int y0){
     int X = x + SPRITE_WIDTH - 1;
     int Y = y + SPRITE_HEIGHT - 1;
@@ -70,32 +93,23 @@ bool Actor::collides(int x, int y, int x0, int y0){
     
 }
 
-//////////////////////////////////////////////////////////////////////////////
-///DamageableActor Implementation
-//////////////////////////////////////////////////////////////////////////////
-
-bool DamageableActor::damageable() const{
-    return true;
+// Reverse the direction this actor is facing.
+void Actor::reverseDirection(){
+    //TODO: Finish
 }
 
-//////////////////////////////////////////////////////////////////////////////
-///MobileActor Implementation
-//////////////////////////////////////////////////////////////////////////////
-
-bool MobileActor::canMove() const{
-    return true;
+// Set destx and desty to the coordinates dist pixels away in direction
+// dir from this actor's position.
+void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
+    //TODO: Finish
 }
 
 //////////////////////////////////////////////////////////////////////////////
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP, 4, 0){
+Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP){
     m_health = 1;
-}
-
-Peach::~Peach(){
-    
 }
 
 void Peach::doSomething(){
@@ -181,14 +195,66 @@ void Peach::doSomething(){
     
 }
 
+inline
+void Peach::getBonked(bool bonkerIsInvinciblePeach){
+    //TODO: Finish
+}
+
+inline
+void Peach::sufferDamageIfDamageable(){
+    //TODO: Finish
+}
+
 void Peach::bonk(){
-    if(true)
-        true;
+}
+
+bool Peach::canMove() const{
+    return true;
+}
+
+// Set Peach's hit points.
+void setHP(int hp){
+    
+}
+
+// Grant Peach invincibility for this number of ticks.
+void gainInvincibility(int ticks){
+    //TODO: Finish
+}
+
+// Grant Peach Shoot Power.
+void gainShootPower(){
+    //TODO: Finish
+}
+
+// Grant Peach Jump Power.
+void gainJumpPower(){
+    //TODO: Finish
+}
+
+// Is Peach invincible?
+bool Peach::isInvincible() const{
+    //TODO: Finish
+    return true;
+}
+
+// Does Peach have Shoot Power?
+bool Peach::hasShootPower() const{
+    //TODO: Finish
+    return true;
+}
+
+// Does Peach have Jump Power?
+bool Peach::hasJumpPower() const{
+    //TODO: Finish
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 ///Obstacle Implementation
 //////////////////////////////////////////////////////////////////////////////
+
+Obstacle::Obstacle(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP, right, 2){}
 
 void Obstacle::doSomething(){}
 
@@ -200,16 +266,16 @@ bool Obstacle::impedes() const{
 ///Block Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Block::Block(int startX, int startY, StudentWorld* sWP) : Actor(IID_BLOCK, startX, startY, sWP, 0, 2){
+Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle(IID_BLOCK, startX, startY, sWP){
+    m_g = g;
     m_wasBonked = false;
 }
 
 void Block::bonk(){
+    std::cerr << "bonk\n";
     sWP()->playSound(SOUND_PLAYER_BONK);
-    std::cerr << "bonk" << std::endl;
-    if(!m_wasBonked){
+    if(!m_wasBonked)
         m_wasBonked = true;
-    }
 }
     
 
@@ -218,31 +284,19 @@ void Block::bonk(){
 //////////////////////////////////////////////////////////////////////////////
 
 
-Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Actor(IID_PIPE, startX, startY, sWP, 0, 2){}
+Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Obstacle(IID_PIPE, startX, startY, sWP){}
 
 void Pipe::bonk(){
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
-///Flag Implementation
+///Objective Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Flag::Flag(int startX, int startY, StudentWorld* sWP) : Actor(IID_FLAG, startX, startY, sWP, 0, 2){}
-
-void Flag::doSomething(){
-    
+Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder) : Actor(isGameEnder ? IID_MARIO : IID_FLAG, startX, startY, sWP){
+    m_isGameEnder = isGameEnder;
 }
-
-void Flag::bonk(){
-    
-}
-
-//////////////////////////////////////////////////////////////////////////////
-///Mario Implementation
-//////////////////////////////////////////////////////////////////////////////
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 ///Flower Implementation
