@@ -3,13 +3,21 @@
 
 #include "GraphObject.h"
 
+//global constants
+const int DEFAULT_DEPTH = 0;
+const int LEVEL_CLEARANCE_SCORE = 1000;
+const int FALL_DISTANCE = 4;
+const int JUMP_DISTANCE = 4;
+const int MOVEMENT_DISTANCE = 4;
+const int JUMP_HEIGHT_CHECK = 1;
+
 class StudentWorld;
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class Actor : public GraphObject{
 public:
     //constructor and destructors
-    Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir = right, int depth = 0);
+    Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir = right, int depth = DEFAULT_DEPTH);
     virtual ~Actor(){}
     
     //base actions
@@ -55,6 +63,7 @@ public:
     
     //Peach actions
     void setHP(int hp);
+    int getHP() const;
     void gainInvincibility(int ticks);
     void gainShootPower();
     void gainJumpPower();
@@ -67,7 +76,7 @@ private:
     virtual void doSomethingAux() override;
     
     //private member variables
-    int m_health;
+    int m_hp;
     int m_invTick;
     int m_tempInvTick;
     int m_fBTick;

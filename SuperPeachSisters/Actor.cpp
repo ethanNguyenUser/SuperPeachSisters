@@ -59,20 +59,7 @@ void Actor::sufferDamageIfDamageable(){}
 
 // Fall the indicated distance if not blocked.
 void Actor::fallIfPossible(int dist){
-    
-}
-
-bool Actor::collides(int x, int y, int x0, int y0){
-    int X = x + SPRITE_WIDTH - 1;
-    int Y = y + SPRITE_HEIGHT - 1;
-    int X0 = x0 + SPRITE_WIDTH - 1;
-    int Y0 = y0 + SPRITE_HEIGHT - 1;
-//
-//    return ((x <= x0 && X >= x0) || (X0 >= x && X0 <= X)) &&
-//    ((y <= y0 && Y >= y0) || (Y0 >= y && Y0 <= Y));
-    
-    return (x <= X0 && X >= x0 && y <= Y0 && Y >= y0);
-    
+    sWP()->moveIfPossible(this, getX(), getY() - dist);
 }
 
 // Reverse the direction this actor is facing.
@@ -98,7 +85,7 @@ void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& d
 //////////////////////////////////////////////////////////////////////////////
 
 Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP){
-    m_health = 1;
+    m_hp = 1;
 }
 
 void Peach::getBonked(bool bonkerIsInvinciblePeach){
@@ -106,8 +93,8 @@ void Peach::getBonked(bool bonkerIsInvinciblePeach){
 }
 
 void Peach::sufferDamageIfDamageable(){
-    m_health--;
-    if(m_health < 1)
+    setHP(m_hp - 1);
+    if(m_hp < 1)
         setDead();
 }
 
@@ -120,17 +107,23 @@ bool Peach::canMove() const{
 
 // Set Peach's hit points.
 void Peach::setHP(int hp){
-    m_health = hp;
+    if(m_tempInvTick > 0 || m_invTick > 0)
+        return;
+    m_hp = hp;
+}
+
+int Peach::getHP() const{
+    return m_hp;
 }
 
 // Grant Peach invincibility for this number of ticks.
 void Peach::gainInvincibility(int ticks){
-    //TODO: Finish
+    m_invTick = ticks;
 }
 
 // Grant Peach Shoot Power.
 void Peach::gainShootPower(){
-    //TODO: Finish
+    
 }
 
 // Grant Peach Jump Power.
@@ -169,61 +162,38 @@ void Peach::doSomethingAux(){
     if(m_fBTick > 0)
         m_fBTick--;
     
-    //check collision
-    sWP()->checkCollision(getX(), getY(), this, false);
-
-    int x = getX();
-    int y = getY();
-    
     //check jump
     if(m_remainingJumpDistance > 0){
-        x = getX();
-        y = getY() + 4;
-        if(sWP()->checkCollision(x, y, this, false))
+        if(!sWP()->moveOrBonk(this, getX(), getY() + JUMP_DISTANCE))
             m_remainingJumpDistance = 0;
-        else{
-            moveTo(x, y);
+        else
             m_remainingJumpDistance--;
-        }
     }
     
     //check falling
     else if(m_remainingJumpDistance == 0){
-        x = getX();
-        y = getY() - 4;
-        if(!sWP()->checkCollision(x, y, this, true))
-            moveTo(x, y);
+        fallIfPossible(FALL_DISTANCE);
     }
-
     
     //check keystroke
     int key;
     if(sWP()->getKey(key)){
-        x = getX();
-        y = getY();
-        bool isMoved = false;
         switch(key){
             case KEY_PRESS_LEFT:
                 setDirection(180);
-                x -= 4;
-                isMoved = true;
+                sWP()->moveIfPossible(this, getX() - MOVEMENT_DISTANCE, getY());
                 break;
             case KEY_PRESS_RIGHT:
                 setDirection(0);
-                isMoved = true;
-                x += 4;
+                sWP()->moveIfPossible(this, getX() + MOVEMENT_DISTANCE, getY());
                 break;
             case KEY_PRESS_UP:
-                m_remainingJumpDistance = 8;
-                isMoved = true;
+                if(!sWP()->isMovePossible(this, getX(), getY() - JUMP_HEIGHT_CHECK))
+                    m_remainingJumpDistance = 8;
                 break;
             case KEY_PRESS_SPACE:
-                y -= 4;
                 break;
         }
-        bool isImpeded = sWP()->checkCollision(x, y, this, false);
-        if(!isImpeded && isMoved)
-            moveTo(x, y);
     }
 }
 
@@ -274,7 +244,17 @@ Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder
     m_isGameEnder = isGameEnder;
 }
 
-void Objective::doSomethingAux(){}
+void Objective::doSomethingAux(){
+    if(sWP()->overlapsPeach(this)){
+        sWP()->increaseScore(LEVEL_CLEARANCE_SCORE);
+        setDead();
+        
+        if(m_isGameEnder)
+            sWP()->endLevel(true);
+        else
+            sWP()->endLevel(false);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Flower Implementation
