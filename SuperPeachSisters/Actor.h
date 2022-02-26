@@ -25,7 +25,6 @@ public:
     //behavior differentiators
     virtual bool canMove() const;
     virtual bool impedes() const;
-    virtual bool damageable() const;
     
     //doActionIfPossible
     virtual void sufferDamageIfDamageable();
@@ -37,7 +36,7 @@ public:
     void converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const;
     
 private:
-    //    virtual void doSomethingAux() = 0;
+    virtual void doSomethingAux() = 0;
     StudentWorld* m_sWP;
     bool m_alive;
 };
@@ -49,7 +48,6 @@ public:
     virtual ~Peach(){}
     
     //standard actions
-    virtual void doSomething() override;
     virtual void getBonked(bool bonkerIsInvinciblePeach) override;
     virtual void sufferDamageIfDamageable() override;
     virtual void bonk() override;
@@ -66,7 +64,7 @@ public:
     
     
 private:
-    //    virtual void doSomethingAux();
+    virtual void doSomethingAux() override;
     
     //private member variables
     int m_health;
@@ -82,7 +80,7 @@ public:
     virtual ~Obstacle(){}
     
     virtual bool impedes() const override;
-    virtual void doSomething() override;
+    virtual void doSomethingAux() override;
 private:
 };
 
@@ -96,6 +94,7 @@ public:
     virtual ~Block(){}
 
     virtual void bonk();
+    
 private:
     GoodieType m_g;
     bool m_wasBonked;
@@ -118,6 +117,8 @@ public:
     virtual ~Objective(){}
 
     //    virtual void bonk();
+    
+    virtual void doSomethingAux();
 private:
     bool m_isGameEnder;
 };

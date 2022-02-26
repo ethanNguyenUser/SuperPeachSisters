@@ -22,62 +22,44 @@ Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, in
     m_alive = true;
 }
 
-inline
 void Actor::doSomething(){
-//    if (m_alive)
-//        doSomethingAux();
+    if (m_alive)
+        doSomethingAux();
 }
 
 // Bonk this actor.  Parameter says whether bonker is Peach with invincibiity.
-//inline
-inline
 void Actor::getBonked(bool bonkerIsInvinciblePeach){
     //TODO: Finish
 }
 
-inline
 void Actor::bonk(){}
 
-inline
 StudentWorld* Actor::sWP() const{
     return m_sWP;
 }
 
-inline
 bool Actor::isAlive() const{
     return m_alive;
 }
 
-inline
 void Actor::setDead(){
     m_alive = false;
 }
 
-inline
 bool Actor::canMove() const{
     return false;
 }
 
-inline
 bool Actor::impedes() const{
     return false;
 }
 
-inline
-bool Actor::damageable() const{
-    return false;
-}
-
 // Do what the spec says happens when damage is inflicted on this actor.
-inline
-void Actor::sufferDamageIfDamageable(){
-    //TODO: Finish
-}
+void Actor::sufferDamageIfDamageable(){}
 
 // Fall the indicated distance if not blocked.
-inline
 void Actor::fallIfPossible(int dist){
-    //TODO: Finish
+    
 }
 
 bool Actor::collides(int x, int y, int x0, int y0){
@@ -95,13 +77,20 @@ bool Actor::collides(int x, int y, int x0, int y0){
 
 // Reverse the direction this actor is facing.
 void Actor::reverseDirection(){
-    //TODO: Finish
+    setDirection((getDirection() + 180) % 360);
 }
 
 // Set destx and desty to the coordinates dist pixels away in direction
 // dir from this actor's position.
 void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
-    //TODO: Finish
+    if(dir == right)
+        destx += dir;
+    else if(dir == left)
+        destx -= dir;
+    else if(dir == up)
+        desty += dir;
+    else if(dir == down)
+        desty -= dir;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -112,97 +101,14 @@ Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, start
     m_health = 1;
 }
 
-void Peach::doSomething(){
-    //check alive
-    if(!isAlive())
-        return;
-    
-    //check if invincible
-    if(m_invTick > 0)
-        m_invTick--;
-    
-    //check if temporarily invincible
-    if(m_tempInvTick > 0)
-        m_tempInvTick--;
-    
-    //check if in recharge mode
-    if(m_fBTick > 0)
-        m_fBTick--;
-    
-    //check collision
-    sWP()->checkCollision(getX(), getY(), this);
-
-    int x = getX();
-    int y = getY();
-    
-    //check jump
-    if(m_remainingJumpDistance > 0){
-        x = getX();
-        y = getY() + 4;
-        if(sWP()->checkCollision(x, y, this))
-            m_remainingJumpDistance = 0;
-        else{
-            moveTo(x, y);
-            m_remainingJumpDistance--;
-        }
-    }
-    
-    //check falling
-    else if(m_remainingJumpDistance == 0){
-        x = getX();
-        y = getY() - 4;
-        if(!sWP()->checkCollisionFalling(x, y, this))
-            moveTo(x, y);
-    }
-
-    
-    //check keystroke
-    int key;
-    if(sWP()->getKey(key)){
-        x = getX();
-        y = getY();
-        bool isMoved = false;
-        switch(key){
-            case KEY_PRESS_LEFT:
-                setDirection(180);
-                x -= 4;
-                isMoved = true;
-                break;
-            case KEY_PRESS_RIGHT:
-                setDirection(0);
-                isMoved = true;
-                x += 4;
-                break;
-//            case KEY_PRESS_UP:
-//                y += 4;
-//                break;
-//            case KEY_PRESS_SPACE:
-//                y -= 4;
-//                break;
-            case KEY_PRESS_UP:
-                m_remainingJumpDistance = 8;
-                isMoved = true;
-                break;
-            case KEY_PRESS_SPACE:
-                y -= 4;
-                isMoved = true;
-                break;
-        }
-        bool isImpeded = sWP()->checkCollision(x, y, this);
-        if(!isImpeded && isMoved)
-            moveTo(x, y);
-    }
-    
-}
-
-inline
 void Peach::getBonked(bool bonkerIsInvinciblePeach){
     //TODO: Finish
 }
 
-inline
 void Peach::sufferDamageIfDamageable(){
-    //TODO: Finish
+    m_health--;
+    if(m_health < 1)
+        setDead();
 }
 
 void Peach::bonk(){
@@ -213,22 +119,22 @@ bool Peach::canMove() const{
 }
 
 // Set Peach's hit points.
-void setHP(int hp){
-    
+void Peach::setHP(int hp){
+    m_health = hp;
 }
 
 // Grant Peach invincibility for this number of ticks.
-void gainInvincibility(int ticks){
+void Peach::gainInvincibility(int ticks){
     //TODO: Finish
 }
 
 // Grant Peach Shoot Power.
-void gainShootPower(){
+void Peach::gainShootPower(){
     //TODO: Finish
 }
 
 // Grant Peach Jump Power.
-void gainJumpPower(){
+void Peach::gainJumpPower(){
     //TODO: Finish
 }
 
@@ -250,17 +156,88 @@ bool Peach::hasJumpPower() const{
     return true;
 }
 
+void Peach::doSomethingAux(){
+    //check if invincible
+    if(m_invTick > 0)
+        m_invTick--;
+    
+    //check if temporarily invincible
+    if(m_tempInvTick > 0)
+        m_tempInvTick--;
+    
+    //check if in recharge mode
+    if(m_fBTick > 0)
+        m_fBTick--;
+    
+    //check collision
+    sWP()->checkCollision(getX(), getY(), this, false);
+
+    int x = getX();
+    int y = getY();
+    
+    //check jump
+    if(m_remainingJumpDistance > 0){
+        x = getX();
+        y = getY() + 4;
+        if(sWP()->checkCollision(x, y, this, false))
+            m_remainingJumpDistance = 0;
+        else{
+            moveTo(x, y);
+            m_remainingJumpDistance--;
+        }
+    }
+    
+    //check falling
+    else if(m_remainingJumpDistance == 0){
+        x = getX();
+        y = getY() - 4;
+        if(!sWP()->checkCollision(x, y, this, true))
+            moveTo(x, y);
+    }
+
+    
+    //check keystroke
+    int key;
+    if(sWP()->getKey(key)){
+        x = getX();
+        y = getY();
+        bool isMoved = false;
+        switch(key){
+            case KEY_PRESS_LEFT:
+                setDirection(180);
+                x -= 4;
+                isMoved = true;
+                break;
+            case KEY_PRESS_RIGHT:
+                setDirection(0);
+                isMoved = true;
+                x += 4;
+                break;
+            case KEY_PRESS_UP:
+                m_remainingJumpDistance = 8;
+                isMoved = true;
+                break;
+            case KEY_PRESS_SPACE:
+                y -= 4;
+                break;
+        }
+        bool isImpeded = sWP()->checkCollision(x, y, this, false);
+        if(!isImpeded && isMoved)
+            moveTo(x, y);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 ///Obstacle Implementation
 //////////////////////////////////////////////////////////////////////////////
 
 Obstacle::Obstacle(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP, right, 2){}
 
-void Obstacle::doSomething(){}
-
 bool Obstacle::impedes() const{
     return true;
 }
+
+void Obstacle::doSomethingAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Block Implementation
@@ -277,7 +254,6 @@ void Block::bonk(){
     if(!m_wasBonked)
         m_wasBonked = true;
 }
-    
 
 //////////////////////////////////////////////////////////////////////////////
 ///Pipe Implementation
@@ -297,6 +273,8 @@ void Pipe::bonk(){
 Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder) : Actor(isGameEnder ? IID_MARIO : IID_FLAG, startX, startY, sWP){
     m_isGameEnder = isGameEnder;
 }
+
+void Objective::doSomethingAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Flower Implementation

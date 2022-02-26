@@ -150,12 +150,13 @@ void StudentWorld::cleanUp()
     m_actors.clear();
 }
 
-//returns true ifthe object impedes
-bool StudentWorld::checkCollision(int x, int y, Actor* actor){
+//returns true if the object impedes
+bool StudentWorld::checkCollision(int x, int y, Actor* actor, bool isFalling){
     for(int i = 0; i < m_actors.size(); i++){
         Actor* other = m_actors[i];
         if(actor->collides(x, y, other->getX(), other->getY())){
-            other->bonk();
+            if(!isFalling)
+                other->bonk();
             if(other->impedes())
                 return true;
         }
@@ -163,14 +164,95 @@ bool StudentWorld::checkCollision(int x, int y, Actor* actor){
     return false;
 }
 
-//returns true ifthe object impedes
-bool StudentWorld::checkCollisionFalling(int x, int y, Actor* actor){
-    for(int i = 0; i < m_actors.size(); i++){
-        Actor* other = m_actors[i];
-        if(actor->collides(x, y, other->getX(), other->getY())){
-            if(other->impedes())
-                return true;
-        }
-    }
+// Add an actor to the world.
+void StudentWorld::addActor(Actor* a){
+    
+}
+
+// Record that a level was finished.  The parameter is true if it was
+// the last level.
+void StudentWorld::endLevel(bool isGameWon){
+    
+}
+
+// If a can move to (destx,desty), move it and return true; otherwise
+// bonk the object that's blockig it and return false.
+bool StudentWorld::moveOrBonk(Actor *a, int destx, int desty) const{
     return false;
+}
+
+// If a can move to (destx,desty), move it and return true; otherwise,
+// return false.
+bool StudentWorld::moveIfPossible(Actor* a, int destx, int desty) const{
+    return false;
+
+}
+
+// If a can move to (destx,destx), return true (but don't move it);
+// otherwise (it would be blocked), return false.
+bool StudentWorld::isMovePossible(Actor* a, int destx, int desty) const{
+    return false;
+
+}
+
+// If Peach overlaps bonker, bonk 'er and return true; otherwise,
+// return false.
+bool StudentWorld::bonkOverlappingPeach(Actor* bonker) const{
+    return false;
+
+}
+
+// If a non-Peach actor overlaps bonker, bonk that non-Peach actor and
+// return true; otherwise, return false.  (The bonker will be Peach.)
+void StudentWorld::bonkOverlappingActor(Actor* bonker) const{
+    
+}
+
+// If Peach overlaps damager, damage her and return true; otherwise,
+// return false.
+bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
+    return false;
+
+}
+
+// If a non-Peach actor overlaps damager, damage that non-Peach actor
+// and return true; otherwise, return false.
+bool StudentWorld::damageOverlappingActor(Actor* damager) const{
+    return false;
+
+}
+
+// Return true if a overlaps Peach; otherwise, return false.
+bool StudentWorld::overlapsPeach(Actor* a) const{
+    return false;
+
+}
+
+// If the y cooodinates of a and Peach are at least yDeltaLimit apart,
+// return false; otherwise, set xDeltaFromActor to the difference
+// between Peach's and a's x coordinates (positive means Peach is to
+// the right of a) and return true.
+bool StudentWorld::getPeachTargetingInfo(Actor* a, int yDeltaLimit, int& xDeltaFromActor) const{
+    return false;
+
+}
+
+// Set Peach's hit points to hp.
+void StudentWorld::setPeachHP(int hp) const{
+    
+}
+
+// Grant Peach invincibility for this number of ticks.
+void StudentWorld::grantInvincibility(int ticks) const{
+    
+}
+
+// Grant Peach Shoot Power.
+void StudentWorld::grantShootPower() const{
+    
+}
+
+// Grant Peach Jump Power.
+void StudentWorld::grantJumpPower() const{
+    
 }
