@@ -17,7 +17,7 @@
 ///Actor Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth) : GraphObject(imageID, startX * VIEW_WIDTH / GRID_WIDTH, startY * VIEW_HEIGHT / GRID_HEIGHT, dir, depth, 1){
+Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth) : GraphObject(imageID, startX, startY, dir, depth, 1){
     m_sWP = sWP;
     m_alive = true;
 }
@@ -46,10 +46,6 @@ void Actor::setDead(){
     m_alive = false;
 }
 
-bool Actor::canMove() const{
-    return false;
-}
-
 bool Actor::impedes() const{
     return false;
 }
@@ -71,13 +67,13 @@ void Actor::reverseDirection(){
 // dir from this actor's position.
 void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
     if(dir == right)
-        destx += dir;
+        destx += dist;
     else if(dir == left)
-        destx -= dir;
+        destx -= dist;
     else if(dir == up)
-        desty += dir;
+        desty += dist;
     else if(dir == down)
-        desty -= dir;
+        desty -= dist;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -86,6 +82,16 @@ void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& d
 
 Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP){
     m_hp = 1;
+    
+    //tick-based variables
+    m_invTick = 0;
+    m_tempInvTick = 0;
+    m_fBTick = 0;
+    m_remainingJumpDistance = 0;
+    
+    //status-based variables
+    m_hasShootPower = false;
+    m_hasJumpPower = false;
 }
 
 void Peach::getBonked(bool bonkerIsInvinciblePeach){
@@ -94,20 +100,23 @@ void Peach::getBonked(bool bonkerIsInvinciblePeach){
 
 void Peach::sufferDamageIfDamageable(){
     setHP(m_hp - 1);
-    if(m_hp < 1)
+    if(m_hp < 1){
         setDead();
+        return;
+    }
+    if(m_hp < 2){
+        m_hasShootPower = false;
+        m_hasJumpPower = false;
+    }
+    
 }
 
 void Peach::bonk(){
 }
 
-bool Peach::canMove() const{
-    return true;
-}
-
 // Set Peach's hit points.
 void Peach::setHP(int hp){
-    if(m_tempInvTick > 0 || m_invTick > 0)
+    if(hp < m_hp && (m_tempInvTick > 0 || m_invTick > 0))
         return;
     m_hp = hp;
 }
@@ -123,18 +132,20 @@ void Peach::gainInvincibility(int ticks){
 
 // Grant Peach Shoot Power.
 void Peach::gainShootPower(){
-    
+    m_hp = 2;
+    m_hasShootPower = true;
 }
 
 // Grant Peach Jump Power.
 void Peach::gainJumpPower(){
     //TODO: Finish
+    m_hp = 2;
+    m_hasShootPower = true;
 }
 
 // Is Peach invincible?
 bool Peach::isInvincible() const{
-    //TODO: Finish
-    return true;
+    return m_invTick > 0;
 }
 
 // Does Peach have Shoot Power?
@@ -192,6 +203,14 @@ void Peach::doSomethingAux(){
                     m_remainingJumpDistance = 8;
                 break;
             case KEY_PRESS_SPACE:
+                if(!m_hasShootPower || m_fBTick > 0)
+                    break;
+                sWP()->playSound(SOUND_PLAYER_FIRE);
+                m_fBTick = FB_RECHARGE_TICKS;
+                int destx = getX();
+                int desty = getY();
+                converDirectionAndDistanceToXY(getDirection(), FIREBALL_SPAWN_DISTANCE, destx, desty);
+                sWP()->addActor(new PeachFireball(destx, desty, sWP(), getDirection()));
                 break;
         }
     }
@@ -219,10 +238,19 @@ Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle
 }
 
 void Block::bonk(){
-    std::cerr << "bonk\n";
-    sWP()->playSound(SOUND_PLAYER_BONK);
-    if(!m_wasBonked)
-        m_wasBonked = true;
+    if(m_g == none || m_wasBonked){
+        sWP()->playSound(SOUND_PLAYER_BONK);
+        return;
+    }
+    
+    m_wasBonked = true;
+    sWP()->playSound(SOUND_POWERUP_APPEARS);
+    if(m_g == flower)
+        sWP()->addActor(new Flower(getX(), getY() + SPRITE_HEIGHT, sWP()));
+    else if(m_g == mushroom)
+        sWP()->addActor(new Mushroom(getX(), getY() + SPRITE_HEIGHT, sWP()));
+    else if(m_g == star)
+        sWP()->addActor(new Star(getX(), getY() + SPRITE_HEIGHT, sWP()));
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -257,21 +285,88 @@ void Objective::doSomethingAux(){
 }
 
 //////////////////////////////////////////////////////////////////////////////
+///Goodie Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP){}
+
+void Goodie::doSomethingAux(){
+    if(sWP()->overlapsPeach(this)){
+        doSomethingGoodieAux();
+        sWP()->playSound(SOUND_PLAYER_POWERUP);
+        setDead();
+        return;
+    }
+    
+    fallIfPossible(GOODIE_FALL_DISTANCE);
+    
+    int destx = getX();
+    int desty = getY();
+    converDirectionAndDistanceToXY(getDirection(), GOODIE_MOVEMENT_DISTANCE, destx, desty);
+    if(!sWP()->isMovePossible(this, destx, desty)){
+        reverseDirection();
+        return;
+    }
+    moveTo(destx, desty);
+}
+
+//////////////////////////////////////////////////////////////////////////////
 ///Flower Implementation
 //////////////////////////////////////////////////////////////////////////////
 
 
+Flower::Flower(int startX, int startY, StudentWorld* sWP) : Goodie(IID_FLOWER, startX, startY, sWP){
+}
+
+void Flower::doSomethingGoodieAux(){
+    sWP()->increaseScore(FLOWER_SCORE);
+    sWP()->grantShootPower();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Mushroom Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Mushroom::Mushroom(int startX, int startY, StudentWorld* sWP) : Goodie(IID_MUSHROOM, startX, startY, sWP){
+}
+
+void Mushroom::doSomethingGoodieAux(){
+    sWP()->increaseScore(MUSHROOM_SCORE);
+    sWP()->grantJumpPower();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Star Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Star::Star(int startX, int startY, StudentWorld* sWP) : Goodie(IID_STAR, startX, startY, sWP){
+}
 
+void Star::doSomethingGoodieAux(){
+    sWP()->increaseScore(STAR_SCORE);
+    sWP()->grantInvincibility(STAR_TICKS);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///Projectile Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir){}
+
+void Projectile::doSomethingAux(){
+    doSomethingProjectileAux();
+    
+    fallIfPossible(PROJECTILE_FALL_DISTANCE);
+    
+    int destx = getX();
+    int desty = getY();
+    converDirectionAndDistanceToXY(getDirection(), PROJECTILE_MOVEMENT_DISTANCE, destx, desty);
+    if(!sWP()->isMovePossible(this, destx, desty)){
+        setDead();
+        return;
+    }
+    moveTo(destx, desty);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Piranha Fireball Implementation
@@ -283,7 +378,12 @@ void Objective::doSomethingAux(){
 ///Peach Fireball Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+PeachFireball::PeachFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PEACH_FIRE, startX, startY, sWP, dir){
+}
 
+void PeachFireball::doSomethingProjectileAux(){
+    
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Shell Implementation

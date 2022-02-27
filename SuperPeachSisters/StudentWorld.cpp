@@ -61,31 +61,31 @@ int StudentWorld::init(){
                     case Level::empty:
                         break;
                     case Level::peach:
-                        m_peach = new Peach(i, j, this);
+                        m_peach = new Peach(gridToCoord(i), gridToCoord(j), this);
                         break;
                     case Level::block:
-                        m_actors.push_back(new Block(i, j, this, Block::none));
+                        m_actors.push_back(new Block(gridToCoord(i), gridToCoord(j), this, Block::none));
                         break;
                     case Level::pipe:
-                        m_actors.push_back(new Pipe(i, j, this));
+                        m_actors.push_back(new Pipe(gridToCoord(i), gridToCoord(j), this));
                         break;
                     case Level::flag:
-                        m_actors.push_back(new Objective(i, j, this, false));
+                        m_actors.push_back(new Objective(gridToCoord(i), gridToCoord(j), this, false));
                         break;
                     case Level::mario:
-                        m_actors.push_back(new Objective(i, j, this, true));
+                        m_actors.push_back(new Objective(gridToCoord(i), gridToCoord(j), this, true));
                         break;
                     case Level::flower_goodie_block:
-                        m_actors.push_back(new Block(i, j, this, Block::flower));
+                        m_actors.push_back(new Block(gridToCoord(i), gridToCoord(j), this, Block::flower));
                         break;
                     case Level::mushroom_goodie_block:
-                        m_actors.push_back(new Block(i, j, this, Block::mushroom));
+                        m_actors.push_back(new Block(gridToCoord(i), gridToCoord(j), this, Block::mushroom));
                         break;
                     case Level::star_goodie_block:
-                        m_actors.push_back(new Block(i, j, this, Block::star));
+                        m_actors.push_back(new Block(gridToCoord(i), gridToCoord(j), this, Block::star));
                         break;
                     case Level::goomba:
-//                        m_actors.push_back(new Goomba(i, j, this));
+//                        m_actors.push_back(new Goomba(gridToCoord(i), gridToCoord(j), this));
                         break;
                     case Level::koopa:
                         break;
@@ -301,4 +301,8 @@ void StudentWorld::grantShootPower() const{
 // Grant Peach Jump Power.
 void StudentWorld::grantJumpPower() const{
     m_peach->gainJumpPower();
+}
+
+int StudentWorld::gridToCoord(int grid) const{
+    return grid * VIEW_WIDTH / GRID_WIDTH;
 }

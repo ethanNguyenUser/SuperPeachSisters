@@ -38,8 +38,10 @@ public:
     void grantInvincibility(int ticks) const;
     void grantShootPower() const;
     void grantJumpPower() const;
-        
+            
 private:
+    int gridToCoord(int grid) const;
+    
     std::vector<Actor*> m_actors;
     Peach* m_peach;
     

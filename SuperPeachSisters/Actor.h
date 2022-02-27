@@ -6,10 +6,25 @@
 //global constants
 const int DEFAULT_DEPTH = 0;
 const int LEVEL_CLEARANCE_SCORE = 1000;
+
 const int FALL_DISTANCE = 4;
 const int JUMP_DISTANCE = 4;
 const int MOVEMENT_DISTANCE = 4;
 const int JUMP_HEIGHT_CHECK = 1;
+const int FIREBALL_SPAWN_DISTANCE = 4;
+
+const int FLOWER_SCORE = 50;
+const int MUSHROOM_SCORE = 75;
+const int STAR_SCORE = 100;
+
+const int GOODIE_FALL_DISTANCE = 2;
+const int GOODIE_MOVEMENT_DISTANCE = 2;
+
+const int PROJECTILE_FALL_DISTANCE = 2;
+const int PROJECTILE_MOVEMENT_DISTANCE = 2;
+
+const int STAR_TICKS = 150;
+const int FB_RECHARGE_TICKS = 8;
 
 class StudentWorld;
 
@@ -31,7 +46,6 @@ public:
     void setDead();
     
     //behavior differentiators
-    virtual bool canMove() const;
     virtual bool impedes() const;
     
     //doActionIfPossible
@@ -59,7 +73,6 @@ public:
     virtual void getBonked(bool bonkerIsInvinciblePeach) override;
     virtual void sufferDamageIfDamageable() override;
     virtual void bonk() override;
-    virtual bool canMove() const override;
     
     //Peach actions
     void setHP(int hp);
@@ -81,6 +94,8 @@ private:
     int m_tempInvTick;
     int m_fBTick;
     int m_remainingJumpDistance;
+    bool m_hasShootPower;
+    bool m_hasJumpPower;
 };
 
 class Obstacle : public Actor{
@@ -122,10 +137,9 @@ private:
 //Mario or Flag
 class Objective: virtual public Actor{
 public:
+    //constructor and destructor
     Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder);
     virtual ~Objective(){}
-
-    //    virtual void bonk();
     
     virtual void doSomethingAux();
 private:
@@ -134,36 +148,57 @@ private:
 
 class Goodie : public Actor{
 public:
+    //constructor and destructor
+    Goodie(int imageID, int startX, int startY, StudentWorld* sWP);
     virtual ~Goodie(){}
     
+    virtual void doSomethingAux();
+    
 private:
+    virtual void doSomethingGoodieAux() = 0;
 };
 
 class Flower : public Goodie{
 public:
+    //constructor and destructor
+    Flower(int startX, int startY, StudentWorld* sWP);
     virtual ~Flower(){}
+    
+    virtual void doSomethingGoodieAux();
 
 private:
 };
 
 class Mushroom : public Goodie{
 public:
+    //constructor and destructor
+    Mushroom(int startX, int startY, StudentWorld* sWP);
     virtual ~Mushroom(){}
-
+    
+    virtual void doSomethingGoodieAux();
+    
 private:
 };
 
 class Star : public Goodie{
 public:
+    //constructor and destructor
+    Star(int startX, int startY, StudentWorld* sWP);
     virtual ~Star(){}
     
+    virtual void doSomethingGoodieAux();
 private:
 };
 
 class Projectile : public Actor{
 public:
+    //constructor and destructor
+    Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir);
+    virtual ~Projectile(){}
     
+    virtual void doSomethingAux();
 private:
+    virtual void doSomethingProjectileAux() = 0;
 };
 
 class PiranhaFireball : public Projectile{
@@ -174,9 +209,13 @@ private:
 
 class PeachFireball : public Projectile{
 public:
+    //constructor and destructor
+    PeachFireball(int startX, int startY, StudentWorld* sWP, int dir);
+    virtual ~PeachFireball(){}
     
+    virtual void doSomethingProjectileAux() override;
+
 private:
-    virtual void doSomethingAux();
 };
 
 class Shell : public Projectile{
