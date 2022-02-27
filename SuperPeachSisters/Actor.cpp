@@ -32,8 +32,6 @@ void Actor::getBonked(bool bonkerIsInvinciblePeach){
     //TODO: Finish
 }
 
-void Actor::bonk(){}
-
 StudentWorld* Actor::sWP() const{
     return m_sWP;
 }
@@ -95,7 +93,7 @@ Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, start
 }
 
 void Peach::getBonked(bool bonkerIsInvinciblePeach){
-    //TODO: Finish
+    sufferDamageIfDamageable();
 }
 
 void Peach::sufferDamageIfDamageable(){
@@ -109,9 +107,8 @@ void Peach::sufferDamageIfDamageable(){
         m_hasJumpPower = false;
     }
     
-}
-
-void Peach::bonk(){
+    if(m_tempInvTick == 0)
+        m_tempInvTick = TEMP_INV_TICKS;
 }
 
 // Set Peach's hit points.
@@ -140,7 +137,7 @@ void Peach::gainShootPower(){
 void Peach::gainJumpPower(){
     //TODO: Finish
     m_hp = 2;
-    m_hasShootPower = true;
+    m_hasJumpPower = true;
 }
 
 // Is Peach invincible?
@@ -173,12 +170,18 @@ void Peach::doSomethingAux(){
     if(m_fBTick > 0)
         m_fBTick--;
     
+    //check if Peach overlaps an object
+    sWP()->bonkOverlappingActor(this);
+    
+    
     //check jump
     if(m_remainingJumpDistance > 0){
-        if(!sWP()->moveOrBonk(this, getX(), getY() + JUMP_DISTANCE))
-            m_remainingJumpDistance = 0;
-        else
+        if(sWP()->moveIfPossible(this, getX(), getY() + JUMP_DISTANCE))
             m_remainingJumpDistance--;
+        else{
+            m_remainingJumpDistance = 0;
+            sWP()->moveOrBonk(this, getX(), getY() + JUMP_DISTANCE);
+        }
     }
     
     //check falling
@@ -191,16 +194,18 @@ void Peach::doSomethingAux(){
     if(sWP()->getKey(key)){
         switch(key){
             case KEY_PRESS_LEFT:
-                setDirection(180);
+                setDirection(left);
                 sWP()->moveIfPossible(this, getX() - MOVEMENT_DISTANCE, getY());
                 break;
             case KEY_PRESS_RIGHT:
-                setDirection(0);
+                setDirection(right);
                 sWP()->moveIfPossible(this, getX() + MOVEMENT_DISTANCE, getY());
                 break;
             case KEY_PRESS_UP:
-                if(!sWP()->isMovePossible(this, getX(), getY() - JUMP_HEIGHT_CHECK))
-                    m_remainingJumpDistance = 8;
+                if(!sWP()->isMovePossible(this, getX(), getY() - JUMP_HEIGHT_CHECK)){
+                    sWP()->playSound(SOUND_PLAYER_JUMP);
+                    m_remainingJumpDistance = m_hasJumpPower ? MUSHROOM_JUMP_DISTANCE : NORMAL_JUMP_DISTANCE;
+                }
                 break;
             case KEY_PRESS_SPACE:
                 if(!m_hasShootPower || m_fBTick > 0)
@@ -237,7 +242,7 @@ Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle
     m_wasBonked = false;
 }
 
-void Block::bonk(){
+void Block::getBonked(bool bonkerIsInvinciblePeach){
     if(m_g == none || m_wasBonked){
         sWP()->playSound(SOUND_PLAYER_BONK);
         return;
@@ -260,15 +265,14 @@ void Block::bonk(){
 
 Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Obstacle(IID_PIPE, startX, startY, sWP){}
 
-void Pipe::bonk(){
-}
+void Pipe::getBonked(bool bonkerIsInvinciblePeach){}
 
 
 //////////////////////////////////////////////////////////////////////////////
 ///Objective Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder) : Actor(isGameEnder ? IID_MARIO : IID_FLAG, startX, startY, sWP){
+Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder) : Actor(isGameEnder ? IID_MARIO : IID_FLAG, startX, startY, sWP, right, 1){
     m_isGameEnder = isGameEnder;
 }
 
@@ -288,7 +292,7 @@ void Objective::doSomethingAux(){
 ///Goodie Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP){}
+Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP, right, 1){}
 
 void Goodie::doSomethingAux(){
     if(sWP()->overlapsPeach(this)){
@@ -351,7 +355,7 @@ void Star::doSomethingGoodieAux(){
 ///Projectile Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir){}
+Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir, 1){}
 
 void Projectile::doSomethingAux(){
     doSomethingProjectileAux();
@@ -372,6 +376,13 @@ void Projectile::doSomethingAux(){
 ///Piranha Fireball Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+PiranhaFireball::PiranhaFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PIRANHA_FIRE, startX, startY, sWP, dir){
+}
+
+void PiranhaFireball::doSomethingProjectileAux(){
+    if(sWP()->damageOverlappingPeach(this))
+        setDead();
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -382,29 +393,118 @@ PeachFireball::PeachFireball(int startX, int startY, StudentWorld* sWP, int dir)
 }
 
 void PeachFireball::doSomethingProjectileAux(){
-    
+    if(sWP()->damageOverlappingActor(this))
+        setDead();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 ///Shell Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Shell::Shell(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_SHELL, startX, startY, sWP, dir){
+}
 
+void Shell::doSomethingProjectileAux(){
+    sWP()->damageOverlappingActor(this);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+///Enemy Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+Enemy::Enemy(int imageID, int startX, int startY, StudentWorld* sWP, bool isMobile) : Actor(imageID, startX, startY, sWP, 180 * randInt(0, 1), 0){
+    m_isMobile = isMobile;
+}
+
+void Enemy::doSomethingAux(){
+    doSomethingEnemyAux();
+
+    if(sWP()->bonkOverlappingPeach(this))
+        return;
+    
+    if(!m_isMobile)
+        return;
+    
+    int destx = getX();
+    int destXFallCheck = getX();
+    int desty = getY();
+    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
+    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE + SPRITE_WIDTH - 1, destXFallCheck, desty);
+    if(!sWP()->isMovePossible(this, destx, desty) || sWP()->isMovePossible(this, destXFallCheck, desty - SPRITE_HEIGHT)){
+        reverseDirection();
+    }
+    destx = getX();
+    desty = getY();
+    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
+    moveTo(destx, desty);
+}
+
+void Enemy::getBonked(bool bonkerIsInvinciblePeach){
+    if(bonkerIsInvinciblePeach){
+        sWP()->playSound(SOUND_PLAYER_KICK);
+        sufferDamageIfDamageable();
+    }
+}
+
+void Enemy::sufferDamageIfDamageable(){
+    if(!isAlive())
+        return;
+    sWP()->increaseScore(ENEMY_SCORE);
+    doSomethingEnemyDeathAux();
+    setDead();
+}
+
+void Enemy::doSomethingEnemyDeathAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Goomba Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Goomba::Goomba(int startX, int startY, StudentWorld* sWP) : Enemy(IID_GOOMBA, startX, startY, sWP, true){
+}
 
+void Goomba::doSomethingEnemyAux(){
+    
+}
 
 //////////////////////////////////////////////////////////////////////////////
-///Koopa mplementation
+///Koopa Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Koopa::Koopa(int startX, int startY, StudentWorld* sWP) : Enemy(IID_KOOPA, startX, startY, sWP, true){
+}
+
+void Koopa::doSomethingEnemyAux(){
+    
+}
+
+void Koopa::doSomethingEnemyDeathAux(){
+    sWP()->addActor(new Shell(getX(), getY(), sWP(), getDirection()));
+}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Piranha Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+Piranha::Piranha(int startX, int startY, StudentWorld* sWP) : Enemy(IID_PIRANHA, startX, startY, sWP, false){
+    m_firingDelay = 0;
+}
 
-
+void Piranha::doSomethingEnemyAux(){
+    increaseAnimationNumber();
+    int x;
+    if(!sWP()->getPeachTargetingInfo(this, PIRANHA_DETECTION_DISTANCE, x))
+        return;
+    if(x > 0)
+        setDirection(right);
+    else
+        setDirection(left);
+    if(m_firingDelay > 0){
+        m_firingDelay--;
+        return;
+    }
+    if(abs(x) < PIRANHA_RANGE){
+        sWP()->addActor(new PiranhaFireball(getX(), getY(), sWP(), getDirection()));
+        m_firingDelay = PIRANHA_COOLDOWN;
+    }
+}

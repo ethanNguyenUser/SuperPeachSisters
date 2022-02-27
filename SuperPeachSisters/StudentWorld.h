@@ -29,7 +29,7 @@ public:
     bool moveIfPossible(Actor* a, int destx, int desty) const;
     bool isMovePossible(Actor* a, int destx, int desty) const;
     bool bonkOverlappingPeach(Actor* bonker) const;
-    bool bonkOverlappingActor(Peach* bonker) const;
+    void bonkOverlappingActor(Peach* bonker) const;
     bool damageOverlappingPeach(Actor* damager) const;
     bool damageOverlappingActor(Actor* damager) const;
     bool overlapsPeach(Actor* a) const;

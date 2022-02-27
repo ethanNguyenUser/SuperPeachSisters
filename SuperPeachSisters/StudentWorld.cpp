@@ -85,11 +85,13 @@ int StudentWorld::init(){
                         m_actors.push_back(new Block(gridToCoord(i), gridToCoord(j), this, Block::star));
                         break;
                     case Level::goomba:
-//                        m_actors.push_back(new Goomba(gridToCoord(i), gridToCoord(j), this));
+                        m_actors.push_back(new Goomba(gridToCoord(i), gridToCoord(j), this));
                         break;
                     case Level::koopa:
+                        m_actors.push_back(new Koopa(gridToCoord(i), gridToCoord(j), this));
                         break;
                     case Level::piranha:
+                        m_actors.push_back(new Piranha(gridToCoord(i), gridToCoord(j), this));
                         break;
                 }
             }
@@ -113,25 +115,19 @@ int StudentWorld::move(){
             
             if(levelIsEnded){
                 levelIsEnded = false;
+                playSound(SOUND_FINISHED_LEVEL);
                 return GWSTATUS_FINISHED_LEVEL;
             }
             
-            if(gameIsEnded)
+            if(gameIsEnded){
+                playSound(SOUND_GAME_OVER);
                 return GWSTATUS_PLAYER_WON;
+            }
             
             if(!m_peach->isAlive()){
                 playSound(SOUND_PLAYER_DIE);
-                delete m_peach;
                 return GWSTATUS_PLAYER_DIED;
             }
-//            if (Peach reached Mario) {
-//                play game over sound
-//                return GWSTATUS_WON_GAME;
-//            }
-//            if (Peach competed the current level) {
-//                play completed level sound
-//                return GWSTATUS_FINISHED_LEVEL;
-//            }
         }
     }
     
@@ -192,7 +188,7 @@ bool StudentWorld::moveOrBonk(Actor *a, int destx, int desty) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
         if(collides(temp->getX(), temp->getY(), destx, desty)){
-            temp->bonk();
+            temp->getBonked(false);
             return false;
         }
     }
@@ -224,7 +220,7 @@ bool StudentWorld::isMovePossible(Actor* a, int destx, int desty) const{
 // return false.
 bool StudentWorld::bonkOverlappingPeach(Actor* bonker) const{
     if(overlapsPeach(bonker)){
-        m_peach->bonk();
+        m_peach->getBonked(false);
         return true;
     }
     return false;
@@ -232,16 +228,13 @@ bool StudentWorld::bonkOverlappingPeach(Actor* bonker) const{
 
 // If a non-Peach actor overlaps bonker, bonk that non-Peach actor and
 // return true; otherwise, return false.  (The bonker will be Peach.)
-bool StudentWorld::bonkOverlappingActor(Peach* bonker) const{
-    bool wasBonked = false;
+void StudentWorld::bonkOverlappingActor(Peach* bonker) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
         if(collides(temp->getX(), temp->getY(), bonker->getX(), bonker->getY())){
             temp->getBonked(bonker->isInvincible());
-            wasBonked = true;
         }
     }
-    return wasBonked;
 }
 
 // If Peach overlaps damager, damage her and return true; otherwise,
@@ -259,6 +252,8 @@ bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
 bool StudentWorld::damageOverlappingActor(Actor* damager) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
+        if(temp == damager)
+            continue;
         if(collides(temp->getX(), temp->getY(), damager->getX(), damager->getY())){
             temp->sufferDamageIfDamageable();
             return true;

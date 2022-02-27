@@ -4,27 +4,37 @@
 #include "GraphObject.h"
 
 //global constants
-const int DEFAULT_DEPTH = 0;
 const int LEVEL_CLEARANCE_SCORE = 1000;
 
+//Peach constants
 const int FALL_DISTANCE = 4;
 const int JUMP_DISTANCE = 4;
+const int NORMAL_JUMP_DISTANCE = 8;
+const int MUSHROOM_JUMP_DISTANCE = 12;
 const int MOVEMENT_DISTANCE = 4;
 const int JUMP_HEIGHT_CHECK = 1;
 const int FIREBALL_SPAWN_DISTANCE = 4;
+const int STAR_TICKS = 150;
+const int FB_RECHARGE_TICKS = 8;
+const int TEMP_INV_TICKS = 10;
 
+//Goodie constants
 const int FLOWER_SCORE = 50;
 const int MUSHROOM_SCORE = 75;
 const int STAR_SCORE = 100;
-
 const int GOODIE_FALL_DISTANCE = 2;
 const int GOODIE_MOVEMENT_DISTANCE = 2;
 
+//Projectile constants
 const int PROJECTILE_FALL_DISTANCE = 2;
 const int PROJECTILE_MOVEMENT_DISTANCE = 2;
 
-const int STAR_TICKS = 150;
-const int FB_RECHARGE_TICKS = 8;
+//Enemy constants
+const int ENEMY_MOVEMENT_DISTANCE = 1;
+const int ENEMY_SCORE = 100;
+const int PIRANHA_DETECTION_DISTANCE = 1.5 * SPRITE_WIDTH;
+const int PIRANHA_RANGE = 8 * SPRITE_WIDTH;
+const int PIRANHA_COOLDOWN = 40;
 
 class StudentWorld;
 
@@ -32,13 +42,12 @@ class StudentWorld;
 class Actor : public GraphObject{
 public:
     //constructor and destructors
-    Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir = right, int depth = DEFAULT_DEPTH);
+    Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir = right, int depth = 0);
     virtual ~Actor(){}
     
     //base actions
     virtual void doSomething();
     virtual void getBonked(bool bonkerIsInvinciblePeach);
-    virtual void bonk();
     
     //getters and setters
     StudentWorld* sWP() const;
@@ -72,7 +81,6 @@ public:
     //standard actions
     virtual void getBonked(bool bonkerIsInvinciblePeach) override;
     virtual void sufferDamageIfDamageable() override;
-    virtual void bonk() override;
     
     //Peach actions
     void setHP(int hp);
@@ -117,7 +125,7 @@ public:
     Block(int startX, int startY, StudentWorld* sWP, GoodieType g = none);
     virtual ~Block(){}
 
-    virtual void bonk();
+    virtual void getBonked(bool bonkerIsInvinciblePeach);
     
 private:
     GoodieType m_g;
@@ -130,7 +138,7 @@ public:
     Pipe(int startX, int startY, StudentWorld* sWP);
     virtual ~Pipe(){}
     
-    virtual void bonk();
+    virtual void getBonked(bool bonkerIsInvinciblePeach);
 private:
 };
 
@@ -203,7 +211,12 @@ private:
 
 class PiranhaFireball : public Projectile{
 public:
+    //constructor and destructor
+    PiranhaFireball(int startX, int startY, StudentWorld* sWP, int dir);
+    virtual ~PiranhaFireball(){}
     
+    virtual void doSomethingProjectileAux() override;
+
 private:
 };
 
@@ -220,32 +233,65 @@ private:
 
 class Shell : public Projectile{
 public:
+    //constructor and destructor
+    Shell(int startX, int startY, StudentWorld* sWP, int dir);
+    virtual ~Shell(){}
     
+    virtual void doSomethingProjectileAux() override;
+
 private:
 };
 
 class Enemy : public Actor{
 public:
+    //constructor and destructor
+    Enemy(int imageID, int startX, int startY, StudentWorld* sWP, bool isMobile);
+    virtual ~Enemy(){}
+    
+    void getBonked(bool bonkerIsInvinciblePeach) override;
+    virtual void doSomethingAux() override;
+    virtual void sufferDamageIfDamageable() override;
     
 private:
+    virtual void doSomethingEnemyDeathAux();
+    virtual void doSomethingEnemyAux() = 0;
+    
+    bool m_isMobile;
 };
 
 class Goomba : public Enemy{
 public:
+    //constructor and destructor
+    Goomba(int startX, int startY, StudentWorld* sWP);
+    virtual ~Goomba(){}
     
+    virtual void doSomethingEnemyAux() override;
+
 private:
 };
 
 class Koopa : public Enemy{
 public:
+    //constructor and destructor
+    Koopa(int startX, int startY, StudentWorld* sWP);
+    virtual ~Koopa(){}
     
+    virtual void doSomethingEnemyAux() override;
+    virtual void doSomethingEnemyDeathAux() override;
+
 private:
 };
 
 class Piranha : public Enemy{
 public:
+    //constructor and destructor
+    Piranha(int startX, int startY, StudentWorld* sWP);
+    virtual ~Piranha(){}
+    
+    virtual void doSomethingEnemyAux() override;
     
 private:
+    int m_firingDelay;
 };
 
 #endif // ACTOR_H_
