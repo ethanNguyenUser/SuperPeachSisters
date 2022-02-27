@@ -20,9 +20,7 @@ public:
     virtual int init();
     virtual int move();
     virtual void cleanUp();
-    
-    bool collides(int x, int y, int x0, int y0) const;
-    
+        
     void addActor(Actor* a);
     void endLevel(bool isGameWon);
     bool moveOrBonk(Actor *a, int destx, int desty) const;
@@ -34,12 +32,13 @@ public:
     bool damageOverlappingActor(Actor* damager) const;
     bool overlapsPeach(Actor* a) const;
     bool getPeachTargetingInfo(Actor* a, int yDeltaLimit, int& xDeltaFromActor) const;
-    void setPeachHP(int hp) const;
     void grantInvincibility(int ticks) const;
     void grantShootPower() const;
     void grantJumpPower() const;
             
 private:
+    bool collides(int x, int y, int x0, int y0) const;
+    void updateScoreText();
     int gridToCoord(int grid) const;
     
     std::vector<Actor*> m_actors;

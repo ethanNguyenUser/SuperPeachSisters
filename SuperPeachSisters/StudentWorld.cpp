@@ -129,6 +129,7 @@ int StudentWorld::move(){
                 return GWSTATUS_PLAYER_DIED;
             }
         }
+        updateScoreText();
     }
     
     m_peach->doSomething();
@@ -252,7 +253,7 @@ bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
 bool StudentWorld::damageOverlappingActor(Actor* damager) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
-        if(temp == damager)
+        if(temp == damager || temp->projectileCanPassThrough())
             continue;
         if(collides(temp->getX(), temp->getY(), damager->getX(), damager->getY())){
             temp->sufferDamageIfDamageable();
@@ -278,11 +279,6 @@ bool StudentWorld::getPeachTargetingInfo(Actor* a, int yDeltaLimit, int& xDeltaF
     return true;
 }
 
-// Set Peach's hit points to hp.
-void StudentWorld::setPeachHP(int hp) const{
-    m_peach->setHP(hp);
-}
-
 // Grant Peach invincibility for this number of ticks.
 void StudentWorld::grantInvincibility(int ticks) const{
     m_peach->gainInvincibility(ticks);
@@ -296,6 +292,24 @@ void StudentWorld::grantShootPower() const{
 // Grant Peach Jump Power.
 void StudentWorld::grantJumpPower() const{
     m_peach->gainJumpPower();
+}
+
+void StudentWorld::updateScoreText(){
+    ostringstream oss;
+    oss << "Lives: " << getLives();
+    oss << " Level: ";
+    oss.fill('0');
+    oss << setw(5) << getLevel();
+    oss << " Points: ";
+    oss.fill('0');
+    oss << setw(5) << getScore();
+    if(m_peach->isInvincible())
+        oss << " StarPower!";
+    if(m_peach->hasShootPower())
+        oss << " ShootPower!";
+    if(m_peach->hasJumpPower())
+        oss << " JumpPower!";
+    setGameStatText(oss.str());
 }
 
 int StudentWorld::gridToCoord(int grid) const{

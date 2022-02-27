@@ -17,53 +17,63 @@
 ///Actor Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Actor::Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir, int depth) : GraphObject(imageID, startX, startY, dir, depth, 1){
     m_sWP = sWP;
     m_alive = true;
 }
 
+//destructor
+Actor::~Actor(){}
+
+//Actor will only try doing it's special behavior if it's alive
 void Actor::doSomething(){
     if (m_alive)
         doSomethingAux();
 }
 
-// Bonk this actor.  Parameter says whether bonker is Peach with invincibiity.
-void Actor::getBonked(bool bonkerIsInvinciblePeach){
-    //TODO: Finish
-}
+//bonk this actor, parameter says whether bonker is Peach with invincibiity
+void Actor::getBonked(bool bonkerIsInvinciblePeach){}
 
 StudentWorld* Actor::sWP() const{
     return m_sWP;
 }
 
+//returns whether or not the actor is alive
 bool Actor::isAlive() const{
     return m_alive;
 }
 
+//set Actor's alive status to dead
 void Actor::setDead(){
     m_alive = false;
 }
 
+//an Actor does not impede or block other actors (unlike Obstacles) by default
 bool Actor::impedes() const{
     return false;
 }
 
-// Do what the spec says happens when damage is inflicted on this actor.
+//an Actor cannot have a Projectile pass through it by default
+bool Actor::projectileCanPassThrough() const{
+    return false;
+}
+
+//do what the spec says happens when damage is inflicted on this actor
 void Actor::sufferDamageIfDamageable(){}
 
-// Fall the indicated distance if not blocked.
+//fall the indicated distance if not blocked
 void Actor::fallIfPossible(int dist){
     sWP()->moveIfPossible(this, getX(), getY() - dist);
 }
 
-// Reverse the direction this actor is facing.
+//reverse the direction this actor is facing
 void Actor::reverseDirection(){
     setDirection((getDirection() + 180) % 360);
 }
 
-// Set destx and desty to the coordinates dist pixels away in direction
-// dir from this actor's position.
-void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
+//set destx and desty to the coordinates dist pixels away in direction dir from this actor's position.
+void Actor::convertDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
     if(dir == right)
         destx += dist;
     else if(dir == left)
@@ -78,6 +88,7 @@ void Actor::converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& d
 ///Peach Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP){
     m_hp = 1;
     
@@ -92,71 +103,74 @@ Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, start
     m_hasJumpPower = false;
 }
 
+//destructor
+Peach::~Peach(){}
+
 void Peach::getBonked(bool bonkerIsInvinciblePeach){
     sufferDamageIfDamageable();
 }
 
+//causes Peach to lose HP if she can
 void Peach::sufferDamageIfDamageable(){
-    setHP(m_hp - 1);
+    //Peach can't take damage if she's invincible
+    if(m_tempInvTick > 0 || m_invTick > 0)
+        return;
+    
+    m_hp--;
+    
+    //if Peach's dead, play the death sound, decrease lives, and set her to the dead state
     if(m_hp < 1){
+        sWP()->playSound(SOUND_PLAYER_DIE);
+        sWP()->decLives();
         setDead();
         return;
     }
+    
+    //if Peach got hit but isn't dead because she had a power up, play her hurt sound and reset her power ups to none
     if(m_hp < 2){
+        sWP()->playSound(SOUND_PLAYER_HURT);
         m_hasShootPower = false;
         m_hasJumpPower = false;
     }
     
+    //if Peach got hurt recently, make her temporarily invulnerable
     if(m_tempInvTick == 0)
         m_tempInvTick = TEMP_INV_TICKS;
 }
 
-// Set Peach's hit points.
-void Peach::setHP(int hp){
-    if(hp < m_hp && (m_tempInvTick > 0 || m_invTick > 0))
-        return;
-    m_hp = hp;
-}
-
-int Peach::getHP() const{
-    return m_hp;
-}
-
-// Grant Peach invincibility for this number of ticks.
+//grant Peach invincibility for this number of ticks.
 void Peach::gainInvincibility(int ticks){
     m_invTick = ticks;
 }
 
-// Grant Peach Shoot Power.
+//grant Peach shoot power.
 void Peach::gainShootPower(){
     m_hp = 2;
     m_hasShootPower = true;
 }
 
-// Grant Peach Jump Power.
+//grant Peach jump power.
 void Peach::gainJumpPower(){
-    //TODO: Finish
     m_hp = 2;
     m_hasJumpPower = true;
 }
 
-// Is Peach invincible?
+//return whether Peach is invincible
 bool Peach::isInvincible() const{
     return m_invTick > 0;
 }
 
-// Does Peach have Shoot Power?
+//return whether Peach has shoot power
 bool Peach::hasShootPower() const{
-    //TODO: Finish
-    return true;
+    return m_hasShootPower;
 }
 
-// Does Peach have Jump Power?
+//return whether Peach has jump power
 bool Peach::hasJumpPower() const{
-    //TODO: Finish
-    return true;
+    return m_hasJumpPower;
 }
 
+//Peach will try to decrement tick variables, bonk enemies, and take input
 void Peach::doSomethingAux(){
     //check if invincible
     if(m_invTick > 0)
@@ -174,10 +188,13 @@ void Peach::doSomethingAux(){
     sWP()->bonkOverlappingActor(this);
     
     
-    //check jump
+    //check if previously jumped
     if(m_remainingJumpDistance > 0){
+        //if Peach can still rise, increase her positiona and decrement remaining jumping distance
         if(sWP()->moveIfPossible(this, getX(), getY() + JUMP_DISTANCE))
             m_remainingJumpDistance--;
+        
+        //otherwise, Peach will have bonked her head on something
         else{
             m_remainingJumpDistance = 0;
             sWP()->moveOrBonk(this, getX(), getY() + JUMP_DISTANCE);
@@ -193,28 +210,36 @@ void Peach::doSomethingAux(){
     int key;
     if(sWP()->getKey(key)){
         switch(key){
-            case KEY_PRESS_LEFT:
+                //move left
+            case KEY_PRESS_LEFT: //move left
                 setDirection(left);
                 sWP()->moveIfPossible(this, getX() - MOVEMENT_DISTANCE, getY());
                 break;
-            case KEY_PRESS_RIGHT:
+            case KEY_PRESS_RIGHT: //move right
                 setDirection(right);
                 sWP()->moveIfPossible(this, getX() + MOVEMENT_DISTANCE, getY());
                 break;
-            case KEY_PRESS_UP:
+                //jump
+            case KEY_PRESS_UP: //jump if there's an obstacle below Peach
+                //if there's an obstacle below Peach
                 if(!sWP()->isMovePossible(this, getX(), getY() - JUMP_HEIGHT_CHECK)){
                     sWP()->playSound(SOUND_PLAYER_JUMP);
+                    
+                    //remaining jump distance is higher value if she has the jump power, lower value otherwise
                     m_remainingJumpDistance = m_hasJumpPower ? MUSHROOM_JUMP_DISTANCE : NORMAL_JUMP_DISTANCE;
                 }
                 break;
-            case KEY_PRESS_SPACE:
+            case KEY_PRESS_SPACE: //shoot fireball if Peach has the power up
+                //if Peach has no shoot power or is on cooldown, don't shoot a fireball
                 if(!m_hasShootPower || m_fBTick > 0)
                     break;
+                
+                //otherwise, play the fireball sound, reset the fireball cooldown, and spawn a fireball at a distance in the direction Peach is facing
                 sWP()->playSound(SOUND_PLAYER_FIRE);
                 m_fBTick = FB_RECHARGE_TICKS;
                 int destx = getX();
                 int desty = getY();
-                converDirectionAndDistanceToXY(getDirection(), FIREBALL_SPAWN_DISTANCE, destx, desty);
+                convertDirectionAndDistanceToXY(getDirection(), FIREBALL_SPAWN_DISTANCE, destx, desty);
                 sWP()->addActor(new PeachFireball(destx, desty, sWP(), getDirection()));
                 break;
         }
@@ -225,7 +250,12 @@ void Peach::doSomethingAux(){
 ///Obstacle Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Obstacle::Obstacle(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP, right, 2){}
+
+//destructor
+Obstacle::~Obstacle(){}
+
 
 bool Obstacle::impedes() const{
     return true;
@@ -237,17 +267,24 @@ void Obstacle::doSomethingAux(){}
 ///Block Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle(IID_BLOCK, startX, startY, sWP){
     m_g = g;
     m_wasBonked = false;
 }
 
+//destructor
+Block::~Block(){}
+
+//Block will do nothing if it has no power up inside of it, otherwise, spawn a power up
 void Block::getBonked(bool bonkerIsInvinciblePeach){
+    //if the Block has nothing or was bonked already, play the regular bonk sound and skip the rest of the steps
     if(m_g == none || m_wasBonked){
         sWP()->playSound(SOUND_PLAYER_BONK);
         return;
     }
     
+    //state that the block was bonked, play the power up appears sound, and spawn the correct power up above the block
     m_wasBonked = true;
     sWP()->playSound(SOUND_POWERUP_APPEARS);
     if(m_g == flower)
@@ -262,20 +299,25 @@ void Block::getBonked(bool bonkerIsInvinciblePeach){
 ///Pipe Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-
+//constructor
 Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Obstacle(IID_PIPE, startX, startY, sWP){}
 
-void Pipe::getBonked(bool bonkerIsInvinciblePeach){}
-
+//destructor
+Pipe::~Pipe(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Objective Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder) : Actor(isGameEnder ? IID_MARIO : IID_FLAG, startX, startY, sWP, right, 1){
     m_isGameEnder = isGameEnder;
 }
 
+//destructor
+Objective::~Objective(){}
+
+//if the objective overlaps with peach, it will end the level if it's a flag or end the game if it's Mario
 void Objective::doSomethingAux(){
     if(sWP()->overlapsPeach(this)){
         sWP()->increaseScore(LEVEL_CLEARANCE_SCORE);
@@ -292,7 +334,11 @@ void Objective::doSomethingAux(){
 ///Goodie Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(imageID, startX, startY, sWP, right, 1){}
+
+//destructor
+Goodie::~Goodie(){}
 
 void Goodie::doSomethingAux(){
     if(sWP()->overlapsPeach(this)){
@@ -306,7 +352,7 @@ void Goodie::doSomethingAux(){
     
     int destx = getX();
     int desty = getY();
-    converDirectionAndDistanceToXY(getDirection(), GOODIE_MOVEMENT_DISTANCE, destx, desty);
+    convertDirectionAndDistanceToXY(getDirection(), GOODIE_MOVEMENT_DISTANCE, destx, desty);
     if(!sWP()->isMovePossible(this, destx, desty)){
         reverseDirection();
         return;
@@ -318,9 +364,11 @@ void Goodie::doSomethingAux(){
 ///Flower Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
+Flower::Flower(int startX, int startY, StudentWorld* sWP) : Goodie(IID_FLOWER, startX, startY, sWP){}
 
-Flower::Flower(int startX, int startY, StudentWorld* sWP) : Goodie(IID_FLOWER, startX, startY, sWP){
-}
+//destructor
+Flower::~Flower(){}
 
 void Flower::doSomethingGoodieAux(){
     sWP()->increaseScore(FLOWER_SCORE);
@@ -331,11 +379,15 @@ void Flower::doSomethingGoodieAux(){
 ///Mushroom Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Mushroom::Mushroom(int startX, int startY, StudentWorld* sWP) : Goodie(IID_MUSHROOM, startX, startY, sWP){
-}
+//constructor
+Mushroom::Mushroom(int startX, int startY, StudentWorld* sWP) : Goodie(IID_MUSHROOM, startX, startY, sWP){}
+
+//destructor
+Mushroom::~Mushroom(){}
 
 void Mushroom::doSomethingGoodieAux(){
     sWP()->increaseScore(MUSHROOM_SCORE);
+
     sWP()->grantJumpPower();
 }
 
@@ -343,8 +395,11 @@ void Mushroom::doSomethingGoodieAux(){
 ///Star Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Star::Star(int startX, int startY, StudentWorld* sWP) : Goodie(IID_STAR, startX, startY, sWP){
-}
+//constructor
+Star::Star(int startX, int startY, StudentWorld* sWP) : Goodie(IID_STAR, startX, startY, sWP){}
+
+//destructor
+Star::~Star(){}
 
 void Star::doSomethingGoodieAux(){
     sWP()->increaseScore(STAR_SCORE);
@@ -355,7 +410,11 @@ void Star::doSomethingGoodieAux(){
 ///Projectile Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir, 1){}
+
+//destructor
+Projectile::~Projectile(){}
 
 void Projectile::doSomethingAux(){
     doSomethingProjectileAux();
@@ -364,7 +423,7 @@ void Projectile::doSomethingAux(){
     
     int destx = getX();
     int desty = getY();
-    converDirectionAndDistanceToXY(getDirection(), PROJECTILE_MOVEMENT_DISTANCE, destx, desty);
+    convertDirectionAndDistanceToXY(getDirection(), PROJECTILE_MOVEMENT_DISTANCE, destx, desty);
     if(!sWP()->isMovePossible(this, destx, desty)){
         setDead();
         return;
@@ -372,12 +431,19 @@ void Projectile::doSomethingAux(){
     moveTo(destx, desty);
 }
 
+bool Projectile::projectileCanPassThrough() const{
+    return true;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 ///Piranha Fireball Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-PiranhaFireball::PiranhaFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PIRANHA_FIRE, startX, startY, sWP, dir){
-}
+//constructor
+PiranhaFireball::PiranhaFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PIRANHA_FIRE, startX, startY, sWP, dir){}
+
+//destructor
+PiranhaFireball::~PiranhaFireball(){}
 
 void PiranhaFireball::doSomethingProjectileAux(){
     if(sWP()->damageOverlappingPeach(this))
@@ -389,8 +455,11 @@ void PiranhaFireball::doSomethingProjectileAux(){
 ///Peach Fireball Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-PeachFireball::PeachFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PEACH_FIRE, startX, startY, sWP, dir){
-}
+//constructor
+PeachFireball::PeachFireball(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_PEACH_FIRE, startX, startY, sWP, dir){}
+
+//destructor
+PeachFireball::~PeachFireball(){}
 
 void PeachFireball::doSomethingProjectileAux(){
     if(sWP()->damageOverlappingActor(this))
@@ -401,8 +470,11 @@ void PeachFireball::doSomethingProjectileAux(){
 ///Shell Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Shell::Shell(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_SHELL, startX, startY, sWP, dir){
-}
+//constructor
+Shell::Shell(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(IID_SHELL, startX, startY, sWP, dir){}
+
+//destructor
+Shell::~Shell(){}
 
 void Shell::doSomethingProjectileAux(){
     sWP()->damageOverlappingActor(this);
@@ -412,9 +484,13 @@ void Shell::doSomethingProjectileAux(){
 ///Enemy Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Enemy::Enemy(int imageID, int startX, int startY, StudentWorld* sWP, bool isMobile) : Actor(imageID, startX, startY, sWP, 180 * randInt(0, 1), 0){
     m_isMobile = isMobile;
 }
+
+//destructor
+Enemy::~Enemy(){}
 
 void Enemy::doSomethingAux(){
     doSomethingEnemyAux();
@@ -428,14 +504,14 @@ void Enemy::doSomethingAux(){
     int destx = getX();
     int destXFallCheck = getX();
     int desty = getY();
-    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
-    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE + SPRITE_WIDTH - 1, destXFallCheck, desty);
+    convertDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
+    convertDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE + SPRITE_WIDTH - 1, destXFallCheck, desty);
     if(!sWP()->isMovePossible(this, destx, desty) || sWP()->isMovePossible(this, destXFallCheck, desty - SPRITE_HEIGHT)){
         reverseDirection();
     }
     destx = getX();
     desty = getY();
-    converDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
+    convertDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
     moveTo(destx, desty);
 }
 
@@ -456,27 +532,27 @@ void Enemy::sufferDamageIfDamageable(){
 
 void Enemy::doSomethingEnemyDeathAux(){}
 
+void Enemy::doSomethingEnemyAux(){}
+
 //////////////////////////////////////////////////////////////////////////////
 ///Goomba Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Goomba::Goomba(int startX, int startY, StudentWorld* sWP) : Enemy(IID_GOOMBA, startX, startY, sWP, true){
-}
+//constructor
+Goomba::Goomba(int startX, int startY, StudentWorld* sWP) : Enemy(IID_GOOMBA, startX, startY, sWP, true){}
 
-void Goomba::doSomethingEnemyAux(){
-    
-}
+//destructor
+Goomba::~Goomba(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Koopa Implementation
 //////////////////////////////////////////////////////////////////////////////
 
-Koopa::Koopa(int startX, int startY, StudentWorld* sWP) : Enemy(IID_KOOPA, startX, startY, sWP, true){
-}
+//constructor
+Koopa::Koopa(int startX, int startY, StudentWorld* sWP) : Enemy(IID_KOOPA, startX, startY, sWP, true){}
 
-void Koopa::doSomethingEnemyAux(){
-    
-}
+//destructor
+Koopa::~Koopa(){}
 
 void Koopa::doSomethingEnemyDeathAux(){
     sWP()->addActor(new Shell(getX(), getY(), sWP(), getDirection()));
@@ -504,6 +580,7 @@ void Piranha::doSomethingEnemyAux(){
         return;
     }
     if(abs(x) < PIRANHA_RANGE){
+        sWP()->playSound(SOUND_PIRANHA_FIRE);
         sWP()->addActor(new PiranhaFireball(getX(), getY(), sWP(), getDirection()));
         m_firingDelay = PIRANHA_COOLDOWN;
     }

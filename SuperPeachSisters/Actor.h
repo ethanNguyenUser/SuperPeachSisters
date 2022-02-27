@@ -38,12 +38,11 @@ const int PIRANHA_COOLDOWN = 40;
 
 class StudentWorld;
 
-// Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 class Actor : public GraphObject{
 public:
     //constructor and destructors
     Actor(int imageID, int startX, int startY, StudentWorld* sWP, int dir = right, int depth = 0);
-    virtual ~Actor(){}
+    virtual ~Actor();
     
     //base actions
     virtual void doSomething();
@@ -56,15 +55,15 @@ public:
     
     //behavior differentiators
     virtual bool impedes() const;
+    virtual bool projectileCanPassThrough() const;
     
     //doActionIfPossible
     virtual void sufferDamageIfDamageable();
     void fallIfPossible(int dist);
     
     //helper functions
-    bool collides(int x, int y, int x0, int y0);
     void reverseDirection();
-    void converDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const;
+    void convertDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const;
     
 private:
     virtual void doSomethingAux() = 0;
@@ -76,22 +75,19 @@ class Peach : public Actor{
 public:
     //constructor and destructor
     Peach(int startX, int startY, StudentWorld* sWP);
-    virtual ~Peach(){}
+    virtual ~Peach();
     
     //standard actions
     virtual void getBonked(bool bonkerIsInvinciblePeach) override;
     virtual void sufferDamageIfDamageable() override;
     
     //Peach actions
-    void setHP(int hp);
-    int getHP() const;
     void gainInvincibility(int ticks);
     void gainShootPower();
     void gainJumpPower();
     bool isInvincible() const;
     bool hasShootPower() const;
-    bool hasJumpPower() const;
-    
+    bool hasJumpPower() const;    
     
 private:
     virtual void doSomethingAux() override;
@@ -108,12 +104,15 @@ private:
 
 class Obstacle : public Actor{
 public:
+    //constructor and destructor
     Obstacle(int imageID, int startX, int startY, StudentWorld* sWP);
-    virtual ~Obstacle(){}
+    virtual ~Obstacle();
     
+    //behavior differentiation
     virtual bool impedes() const override;
-    virtual void doSomethingAux() override;
+    
 private:
+    virtual void doSomethingAux() override;
 };
 
 class Block : public Obstacle{
@@ -123,7 +122,7 @@ public:
     
     //constructor and destructor
     Block(int startX, int startY, StudentWorld* sWP, GoodieType g = none);
-    virtual ~Block(){}
+    virtual ~Block();
 
     virtual void getBonked(bool bonkerIsInvinciblePeach);
     
@@ -136,9 +135,8 @@ class Pipe : public Obstacle{
 public:
     //constructor and destructor
     Pipe(int startX, int startY, StudentWorld* sWP);
-    virtual ~Pipe(){}
+    virtual ~Pipe();
     
-    virtual void getBonked(bool bonkerIsInvinciblePeach);
 private:
 };
 
@@ -147,10 +145,12 @@ class Objective: virtual public Actor{
 public:
     //constructor and destructor
     Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder);
-    virtual ~Objective(){}
+    virtual ~Objective();
     
-    virtual void doSomethingAux();
 private:
+    virtual void doSomethingAux() override;
+    
+    //private member variable
     bool m_isGameEnder;
 };
 
@@ -158,11 +158,10 @@ class Goodie : public Actor{
 public:
     //constructor and destructor
     Goodie(int imageID, int startX, int startY, StudentWorld* sWP);
-    virtual ~Goodie(){}
-    
-    virtual void doSomethingAux();
-    
+    virtual ~Goodie();
+        
 private:
+    virtual void doSomethingAux() override;
     virtual void doSomethingGoodieAux() = 0;
 };
 
@@ -170,42 +169,42 @@ class Flower : public Goodie{
 public:
     //constructor and destructor
     Flower(int startX, int startY, StudentWorld* sWP);
-    virtual ~Flower(){}
+    virtual ~Flower();
     
-    virtual void doSomethingGoodieAux();
-
 private:
+    virtual void doSomethingGoodieAux() override;
 };
 
 class Mushroom : public Goodie{
 public:
     //constructor and destructor
     Mushroom(int startX, int startY, StudentWorld* sWP);
-    virtual ~Mushroom(){}
-    
-    virtual void doSomethingGoodieAux();
-    
+    virtual ~Mushroom();
+        
 private:
+    virtual void doSomethingGoodieAux() override;
 };
 
 class Star : public Goodie{
 public:
     //constructor and destructor
     Star(int startX, int startY, StudentWorld* sWP);
-    virtual ~Star(){}
+    virtual ~Star();
     
-    virtual void doSomethingGoodieAux();
 private:
+    virtual void doSomethingGoodieAux() override;
+
 };
 
 class Projectile : public Actor{
 public:
     //constructor and destructor
     Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir);
-    virtual ~Projectile(){}
+    virtual ~Projectile();
     
-    virtual void doSomethingAux();
+    bool projectileCanPassThrough() const override;
 private:
+    virtual void doSomethingAux() override;
     virtual void doSomethingProjectileAux() = 0;
 };
 
@@ -213,48 +212,45 @@ class PiranhaFireball : public Projectile{
 public:
     //constructor and destructor
     PiranhaFireball(int startX, int startY, StudentWorld* sWP, int dir);
-    virtual ~PiranhaFireball(){}
-    
-    virtual void doSomethingProjectileAux() override;
+    virtual ~PiranhaFireball();
 
 private:
+    virtual void doSomethingProjectileAux() override;
 };
 
 class PeachFireball : public Projectile{
 public:
     //constructor and destructor
     PeachFireball(int startX, int startY, StudentWorld* sWP, int dir);
-    virtual ~PeachFireball(){}
+    virtual ~PeachFireball();
     
-    virtual void doSomethingProjectileAux() override;
-
 private:
+    virtual void doSomethingProjectileAux() override;
 };
 
 class Shell : public Projectile{
 public:
     //constructor and destructor
     Shell(int startX, int startY, StudentWorld* sWP, int dir);
-    virtual ~Shell(){}
+    virtual ~Shell();
     
-    virtual void doSomethingProjectileAux() override;
-
 private:
+    virtual void doSomethingProjectileAux() override;
 };
 
 class Enemy : public Actor{
 public:
     //constructor and destructor
     Enemy(int imageID, int startX, int startY, StudentWorld* sWP, bool isMobile);
-    virtual ~Enemy(){}
+    virtual ~Enemy();
     
     void getBonked(bool bonkerIsInvinciblePeach) override;
-    virtual void doSomethingAux() override;
     virtual void sufferDamageIfDamageable() override;
     
 private:
+    virtual void doSomethingAux() override;
     virtual void doSomethingEnemyDeathAux();
-    virtual void doSomethingEnemyAux() = 0;
+    virtual void doSomethingEnemyAux();
     
     bool m_isMobile;
 };
@@ -263,10 +259,8 @@ class Goomba : public Enemy{
 public:
     //constructor and destructor
     Goomba(int startX, int startY, StudentWorld* sWP);
-    virtual ~Goomba(){}
+    virtual ~Goomba();
     
-    virtual void doSomethingEnemyAux() override;
-
 private:
 };
 
@@ -274,12 +268,10 @@ class Koopa : public Enemy{
 public:
     //constructor and destructor
     Koopa(int startX, int startY, StudentWorld* sWP);
-    virtual ~Koopa(){}
+    virtual ~Koopa();
     
-    virtual void doSomethingEnemyAux() override;
-    virtual void doSomethingEnemyDeathAux() override;
-
 private:
+    virtual void doSomethingEnemyDeathAux() override;
 };
 
 class Piranha : public Enemy{
@@ -287,10 +279,11 @@ public:
     //constructor and destructor
     Piranha(int startX, int startY, StudentWorld* sWP);
     virtual ~Piranha(){}
-    
-    virtual void doSomethingEnemyAux() override;
-    
+        
 private:
+    virtual void doSomethingEnemyAux() override;
+
+    //private member variable
     int m_firingDelay;
 };
 
