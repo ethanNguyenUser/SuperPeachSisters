@@ -32,14 +32,14 @@ void Actor::doSomething(){
         doSomethingAux();
 }
 
-//bonk this actor, parameter says whether bonker is Peach with invincibiity
+//bonk this Actor, parameter says whether bonker is Peach with invincibiity
 void Actor::getBonked(bool bonkerIsInvinciblePeach){}
 
 StudentWorld* Actor::sWP() const{
     return m_sWP;
 }
 
-//returns whether or not the actor is alive
+//returns whether or not the Actor is alive
 bool Actor::isAlive() const{
     return m_alive;
 }
@@ -49,7 +49,7 @@ void Actor::setDead(){
     m_alive = false;
 }
 
-//an Actor does not impede or block other actors (unlike Obstacles) by default
+//an Actor does not impede or block other Actors (unlike Obstacles) by default
 bool Actor::impedes() const{
     return false;
 }
@@ -59,7 +59,7 @@ bool Actor::projectileCanPassThrough() const{
     return false;
 }
 
-//do what the spec says happens when damage is inflicted on this actor
+//do what the spec says happens when damage is inflicted on this Actor
 void Actor::sufferDamageIfDamageable(){}
 
 //fall the indicated distance if not blocked
@@ -72,7 +72,7 @@ void Actor::reverseDirection(){
     setDirection((getDirection() + 180) % 360);
 }
 
-//set destx and desty to the coordinates dist pixels away in direction dir from this actor's position.
+//set destx and desty to the coordinates dist pixels away in direction dir from this Actor's position.
 void Actor::convertDirectionAndDistanceToXY(int dir, int dist, int& destx, int& desty) const{
     if(dir == right)
         destx += dist;
@@ -170,7 +170,7 @@ bool Peach::hasJumpPower() const{
     return m_hasJumpPower;
 }
 
-//Peach will try to decrement tick variables, bonk enemies, and take input
+//Peach will try to decrement tick variables, bonk Enemies, and take input
 void Peach::doSomethingAux(){
     //check if invincible
     if(m_invTick > 0)
@@ -184,13 +184,13 @@ void Peach::doSomethingAux(){
     if(m_fBTick > 0)
         m_fBTick--;
     
-    //check if Peach overlaps an object
+    //check if Peach overlaps an Actor
     sWP()->bonkOverlappingActor(this);
     
     
     //check if previously jumped
     if(m_remainingJumpDistance > 0){
-        //if Peach can still rise, increase her positiona and decrement remaining jumping distance
+        //if Peach can still rise, increase her position and decrement remaining jumping distance
         if(sWP()->moveIfPossible(this, getX(), getY() + JUMP_DISTANCE))
             m_remainingJumpDistance--;
         
@@ -220,8 +220,8 @@ void Peach::doSomethingAux(){
                 sWP()->moveOrBonk(this, getX() + MOVEMENT_DISTANCE, getY());
                 break;
                 //jump
-            case KEY_PRESS_UP: //jump if there's an obstacle below Peach
-                //if there's an obstacle below Peach
+            case KEY_PRESS_UP: //jump if there's an Obstacle below Peach
+                //if there's an Obstacle below Peach
                 if(!sWP()->isMovePossible(this, getX(), getY() - JUMP_HEIGHT_CHECK)){
                     sWP()->playSound(SOUND_PLAYER_JUMP);
                     
@@ -234,7 +234,7 @@ void Peach::doSomethingAux(){
                 if(!m_hasShootPower || m_fBTick > 0)
                     break;
                 
-                //otherwise, play the fireball sound, reset the fireball cooldown, and spawn a fireball at a distance in the direction Peach is facing
+                //otherwise, play the fireball sound, reset the fireball cooldown, and spawn a PeachFireball at a distance in the direction Peach is facing
                 sWP()->playSound(SOUND_PLAYER_FIRE);
                 m_fBTick = FB_RECHARGE_TICKS;
                 int destx = getX();
@@ -277,7 +277,7 @@ Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle
 //destructor
 Block::~Block(){}
 
-//block will do nothing if it has no power up inside of it, otherwise, spawn a power up
+//Block will do nothing if it has no power up inside of it, otherwise, spawn a power up
 void Block::getBonked(bool bonkerIsInvinciblePeach){
     //if the Block has nothing or was bonked already, play the regular bonk sound and skip the rest of the steps
     if(m_g == none || m_wasBonked){
@@ -285,7 +285,7 @@ void Block::getBonked(bool bonkerIsInvinciblePeach){
         return;
     }
     
-    //state that the block was bonked, play the power up appears sound, and spawn the correct power up above the block
+    //state that the Block was bonked, play the power up appears sound, and spawn the correct power up above the Block
     m_wasBonked = true;
     sWP()->playSound(SOUND_POWERUP_APPEARS);
     if(m_g == flower)
@@ -318,7 +318,7 @@ Objective::Objective(int startX, int startY, StudentWorld* sWP, bool isGameEnder
 //destructor
 Objective::~Objective(){}
 
-//if the objective overlaps with peach, it will end the level if it's a flag or end the game if it's Mario
+//if the objective overlaps with Peach, it will end the level if it's a Flag or end the game if it's Mario
 void Objective::doSomethingAux(){
     if(sWP()->overlapsPeach(this)){
         sWP()->increaseScore(LEVEL_CLEARANCE_SCORE);
@@ -341,8 +341,9 @@ Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(i
 //destructor
 Goodie::~Goodie(){}
 
-//The goodie will either 
+//Goodies will first check if they're overlapping with Peach, giving her a power up if so. they will then try to fall and try to move
 void Goodie::doSomethingAux(){
+    //if Goodie overlaps with Peach, do specific Goodie behavior, play the power up sound, and kill itself
     if(sWP()->overlapsPeach(this)){
         doSomethingGoodieAux();
         sWP()->playSound(SOUND_PLAYER_POWERUP);
@@ -350,8 +351,10 @@ void Goodie::doSomethingAux(){
         return;
     }
     
+    //try to fall
     fallIfPossible(GOODIE_FALL_DISTANCE);
     
+    //calculate next position. if Goodie can't move due to something blocking it, reverse direction, otherwise, move to destination
     int destx = getX();
     int desty = getY();
     convertDirectionAndDistanceToXY(getDirection(), GOODIE_MOVEMENT_DISTANCE, destx, desty);
@@ -372,6 +375,7 @@ Flower::Flower(int startX, int startY, StudentWorld* sWP) : Goodie(IID_FLOWER, s
 //destructor
 Flower::~Flower(){}
 
+//behavior differentiator
 void Flower::doSomethingGoodieAux(){
     sWP()->increaseScore(FLOWER_SCORE);
     sWP()->grantShootPower();
@@ -387,9 +391,9 @@ Mushroom::Mushroom(int startX, int startY, StudentWorld* sWP) : Goodie(IID_MUSHR
 //destructor
 Mushroom::~Mushroom(){}
 
+//behavior differentiator
 void Mushroom::doSomethingGoodieAux(){
     sWP()->increaseScore(MUSHROOM_SCORE);
-
     sWP()->grantJumpPower();
 }
 
@@ -403,6 +407,7 @@ Star::Star(int startX, int startY, StudentWorld* sWP) : Goodie(IID_STAR, startX,
 //destructor
 Star::~Star(){}
 
+//behavior differentiator
 void Star::doSomethingGoodieAux(){
     sWP()->increaseScore(STAR_SCORE);
     sWP()->grantInvincibility(STAR_TICKS);
@@ -423,11 +428,15 @@ Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, i
 //destructor
 Projectile::~Projectile(){}
 
+//Projectiles do specific behavior, try to fall, and then try to move if possible
 void Projectile::doSomethingAux(){
+    //behavior differentiator
     doSomethingProjectileAux();
     
+    //try to fall
     fallIfPossible(PROJECTILE_FALL_DISTANCE);
     
+    //calculate new position, if the Projectile will be impeded, kill itself, otherwise, move to destination
     int destx = getX();
     int desty = getY();
     convertDirectionAndDistanceToXY(getDirection(), PROJECTILE_MOVEMENT_DISTANCE, destx, desty);
@@ -438,6 +447,7 @@ void Projectile::doSomethingAux(){
     moveTo(destx, desty);
 }
 
+//behavior differentiator lets StudentWorld know that Projectiles can pass through each other
 bool Projectile::projectileCanPassThrough() const{
     return true;
 }
@@ -452,6 +462,7 @@ PiranhaFireball::PiranhaFireball(int startX, int startY, StudentWorld* sWP, int 
 //destructor
 PiranhaFireball::~PiranhaFireball(){}
 
+//behavior differentiator damages Peach rather than other Actors
 void PiranhaFireball::doSomethingProjectileAux(){
     if(sWP()->damageOverlappingPeach(this))
         setDead();
@@ -467,6 +478,7 @@ PeachFireball::PeachFireball(int startX, int startY, StudentWorld* sWP, int dir)
 //destructor
 PeachFireball::~PeachFireball(){}
 
+//behavior differentiator damages Actors rather than Peach
 void PeachFireball::doSomethingProjectileAux(){
     if(sWP()->damageOverlappingActor(this))
         setDead();
@@ -482,6 +494,7 @@ Shell::Shell(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(II
 //destructor
 Shell::~Shell(){}
 
+//behavior differentiator damages Actors rather than Peach
 void Shell::doSomethingProjectileAux(){
     if(sWP()->damageOverlappingActor(this))
         setDead();
@@ -499,15 +512,20 @@ Enemy::Enemy(int imageID, int startX, int startY, StudentWorld* sWP, bool isMobi
 //destructor
 Enemy::~Enemy(){}
 
+//an Enemy will do specific Enemy behavior, try to bonk Peach, and if it can move, try to move
 void Enemy::doSomethingAux(){
+    //Enemy-specific behavior
     doSomethingEnemyAux();
 
+    //try to bonk Peach if she's overlapping
     if(sWP()->bonkOverlappingPeach(this))
         return;
     
+    //skip the case where the Enemy is a Piranha
     if(!m_isMobile)
         return;
     
+    //calculate destination, and if the destination is impeded by an Obstacle or there are no blocks underneath the new position, reverse position and move, otherwise, move in new destination
     int destx = getX();
     int destXFallCheck = getX();
     int desty = getY();
@@ -516,12 +534,15 @@ void Enemy::doSomethingAux(){
     if(!sWP()->isMovePossible(this, destx, desty) || sWP()->isMovePossible(this, destXFallCheck, desty - SPRITE_HEIGHT)){
         reverseDirection();
     }
+    
+    //recalculate position after possibly changing direction
     destx = getX();
     desty = getY();
     convertDirectionAndDistanceToXY(getDirection(), ENEMY_MOVEMENT_DISTANCE, destx, desty);
     moveTo(destx, desty);
 }
 
+//an Enemy will take damage if the bonker is an invincible Peach
 void Enemy::getBonked(bool bonkerIsInvinciblePeach){
     if(bonkerIsInvinciblePeach){
         sWP()->playSound(SOUND_PLAYER_KICK);
@@ -529,14 +550,17 @@ void Enemy::getBonked(bool bonkerIsInvinciblePeach){
     }
 }
 
+//an Enemy will suffer damage by increasing score, doing Enemy-specific behavior, and dying (Enemies only have 1 hp)
 void Enemy::sufferDamageIfDamageable(){
     sWP()->increaseScore(ENEMY_SCORE);
     doSomethingEnemyDeathAux();
     setDead();
 }
 
+//Enemies by default don't have special death actions (only Koopas do)
 void Enemy::doSomethingEnemyDeathAux(){}
 
+//Enemies by default don't do anything besides moving (except Piranhas)
 void Enemy::doSomethingEnemyAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -559,6 +583,7 @@ Koopa::Koopa(int startX, int startY, StudentWorld* sWP) : Enemy(IID_KOOPA, start
 //destructor
 Koopa::~Koopa(){}
 
+//when a Koopa dies, it spawns a shell in the direction it was facing
 void Koopa::doSomethingEnemyDeathAux(){
     sWP()->addActor(new Shell(getX(), getY(), sWP(), getDirection()));
 }
@@ -567,23 +592,37 @@ void Koopa::doSomethingEnemyDeathAux(){
 ///Piranha Implementation
 //////////////////////////////////////////////////////////////////////////////
 
+//constructor
 Piranha::Piranha(int startX, int startY, StudentWorld* sWP) : Enemy(IID_PIRANHA, startX, startY, sWP, false){
     m_firingDelay = 0;
 }
 
+//destructor
+Piranha::~Piranha(){}
+
+//move to next animation frame. if Peach is within detection distance, face her and try to fire if a PiranhaFireball if it can
 void Piranha::doSomethingEnemyAux(){
+    //move to next animation frame
     increaseAnimationNumber();
+    
+    //calculate distance from Peach, skipping next steps if she's not on the same y-level
     int x;
     if(!sWP()->getPeachTargetingInfo(this, PIRANHA_DETECTION_DISTANCE, x))
         return;
+    
+    //face Peach
     if(x > 0)
         setDirection(right);
     else
         setDirection(left);
+    
+    //decrease cooldown for shooting fireballs, skipping next steps if there is still a cooldown
     if(m_firingDelay > 0){
         m_firingDelay--;
         return;
     }
+    
+    //if Peach is within horizontal range, play the fireball sound, spawn a new PiranhaFireball facing the same direction as the Piranha, and set a cooldown
     if(abs(x) < PIRANHA_RANGE){
         sWP()->playSound(SOUND_PIRANHA_FIRE);
         sWP()->addActor(new PiranhaFireball(getX(), getY(), sWP(), getDirection()));

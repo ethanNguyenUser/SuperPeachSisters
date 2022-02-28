@@ -12,15 +12,18 @@
 class Actor;
 class Peach;
 
-class StudentWorld : public GameWorld
-{
+class StudentWorld : public GameWorld{
 public:
+    //constructor and destructor
     StudentWorld(std::string assetPath);
     ~StudentWorld();
+    
+    //GameWorld-called functions
     virtual int init();
     virtual int move();
     virtual void cleanUp();
         
+    //Actor-called functions
     void addActor(Actor* a);
     void endLevel(bool isGameWon);
     bool moveOrBonk(Actor *a, int destx, int desty) const;
@@ -37,13 +40,16 @@ public:
     void grantJumpPower() const;
             
 private:
+    //helper functions
     bool collides(int x, int y, int x0, int y0) const;
-    void updateScoreText();
+    void updateGameText();
     int gridToCoord(int grid) const;
     
+    //private member variables that store actors
     std::vector<Actor*> m_actors;
     Peach* m_peach;
     
+    //private member variables that store state of game
     bool levelIsEnded;
     bool gameIsEnded;
 };

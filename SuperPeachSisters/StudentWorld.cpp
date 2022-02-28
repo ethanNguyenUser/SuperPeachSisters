@@ -31,6 +31,7 @@ StudentWorld::~StudentWorld(){
     cleanUp();
 }
 
+//initialize game by transferring data from Level object to new Actors in an Actor vector
 int StudentWorld::init(){
     //use level file to create Actor objects
     Level lev(assetPath());
@@ -52,7 +53,7 @@ int StudentWorld::init(){
     else if (result == Level::load_success){
         cerr << "Successfully loaded level" << endl;
         
-        //run through level object grid
+        //run through level object grid, creating a new actor and pushing it into the m_actors vector if it exists in the Level grids
         for(int i = 0; i < GRID_WIDTH; i++){
             for(int j = 0; j < GRID_HEIGHT; j++){
                 Level::GridEntry ge;
@@ -106,7 +107,7 @@ int StudentWorld::move(){
     // enemies, flags, blocks, pipes, fireballs, etc.
     // Give each actor a chance to do something, incl. Peach
    
-    //other Actor actions
+    //for all actors, call their doSomething() methods, breaking out from the control flow if Peach dies, the level is finished, or if the game is finished
     for(int i = 0; i < m_actors.size(); i++){
         Actor* actor = m_actors[i];
         if (actor->isAlive()){
@@ -129,29 +130,28 @@ int StudentWorld::move(){
                 return GWSTATUS_PLAYER_DIED;
             }
         }
-        updateScoreText();
     }
     
+    //Peach actions
     m_peach->doSomething();
 
-    // Remove newly-dead actors after each tick
+    //remove newly-dead actors after each tick
     for(int i = 0; i < m_actors.size(); i++){
         if(!m_actors[i]->isAlive()){
             delete m_actors[i];
             m_actors.erase(m_actors.begin() + i);
         }
     }
-//    // Update the game status line
-//    update display text // update the score/lives/level text at screen top
-//    // the player hasn’t completed the current level and hasn’t died, so
-//    // continue playing the current level
-    return GWSTATUS_CONTINUE_GAME;
     
-//    return GWSTATUS_PLAYER_DIED;
+    //update game text at top
+    updateGameText();
+    
+    //resume game
+    return GWSTATUS_CONTINUE_GAME;
 }
 
-void StudentWorld::cleanUp()
-{
+//delete Peach and remove any remaining actors in the m_actors vector
+void StudentWorld::cleanUp(){
     delete m_peach;
     for(int i = 0; i < m_actors.size(); i++){
         delete m_actors[i];
@@ -159,23 +159,12 @@ void StudentWorld::cleanUp()
     m_actors.clear();
 }
 
-//takes two x and y positions of two objects
-bool StudentWorld::collides(int x, int y, int x0, int y0) const{
-    int X = x + SPRITE_WIDTH - 1;
-    int Y = y + SPRITE_HEIGHT - 1;
-    int X0 = x0 + SPRITE_WIDTH - 1;
-    int Y0 = y0 + SPRITE_HEIGHT - 1;
-    
-    return x <= X0 && X >= x0 && y <= Y0 && Y >= y0;
-}
-
-// Add an actor to the world.
+//add an actor to the world
 void StudentWorld::addActor(Actor* a){
     m_actors.push_back(a);
 }
 
-// Record that a level was finished.  The parameter is true if it was
-// the last level. 
+//record that a level was finished. the parameter is true if it was the last level
 void StudentWorld::endLevel(bool isGameWon){
     if(isGameWon)
         gameIsEnded = true;
@@ -183,8 +172,7 @@ void StudentWorld::endLevel(bool isGameWon){
         levelIsEnded = true;
 }
 
-// If a can move to (destx,desty), move it and return true; otherwise
-// bonk the object that's blocking it and return false.
+//if a can move to (destx, desty), move it and return true, otherwise bonk the object that's blocking it and return false
 bool StudentWorld::moveOrBonk(Actor *a, int destx, int desty) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
@@ -197,8 +185,7 @@ bool StudentWorld::moveOrBonk(Actor *a, int destx, int desty) const{
     return true;
 }
 
-// If a can move to (destx,desty), move it and return true; otherwise,
-// return false.
+//if a can move to (destx, desty), move it and return true, otherwise, return false
 bool StudentWorld::moveIfPossible(Actor* a, int destx, int desty) const{
     if(!isMovePossible(a, destx, desty))
         return false;
@@ -206,8 +193,7 @@ bool StudentWorld::moveIfPossible(Actor* a, int destx, int desty) const{
     return true;
 }
 
-// If a can move to (destx,destx), return true (but don't move it);
-// otherwise (it would be blocked), return false.
+//if a can move to (destx, destx), return true (but don't move it), otherwise (it would be blocked), return false
 bool StudentWorld::isMovePossible(Actor* a, int destx, int desty) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
@@ -217,8 +203,7 @@ bool StudentWorld::isMovePossible(Actor* a, int destx, int desty) const{
     return true;
 }
 
-// If Peach overlaps bonker, bonk her and return true; otherwise,
-// return false.
+//if Peach overlaps bonker, bonk her and return true, otherwise, return false
 bool StudentWorld::bonkOverlappingPeach(Actor* bonker) const{
     if(overlapsPeach(bonker)){
         m_peach->getBonked(false);
@@ -227,8 +212,7 @@ bool StudentWorld::bonkOverlappingPeach(Actor* bonker) const{
     return false;
 }
 
-// If a non-Peach actor overlaps bonker, bonk that non-Peach actor and
-// return true; otherwise, return false.  (The bonker will be Peach.)
+//if a non-Peach actor overlaps bonker, bonk that non-Peach actor and return true, otherwise, return false (the bonker will be Peach)
 void StudentWorld::bonkOverlappingActor(Peach* bonker) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
@@ -238,8 +222,7 @@ void StudentWorld::bonkOverlappingActor(Peach* bonker) const{
     }
 }
 
-// If Peach overlaps damager, damage her and return true; otherwise,
-// return false.
+//if Peach overlaps damager, damage her and return true, otherwise, return false
 bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
     if(overlapsPeach(damager)){
         m_peach->sufferDamageIfDamageable();
@@ -248,8 +231,7 @@ bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
     return false;
 }
 
-// If a non-Peach actor overlaps damager, damage that non-Peach actor
-// and return true; otherwise, return false.
+//if a non-Peach actor overlaps damager, damage that non-Peach actor and return true, otherwise, return false
 bool StudentWorld::damageOverlappingActor(Actor* damager) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
@@ -263,15 +245,12 @@ bool StudentWorld::damageOverlappingActor(Actor* damager) const{
     return false;
 }
 
-// Return true if a overlaps Peach; otherwise, return false.
+//return true if a overlaps Peach, otherwise, return false.
 bool StudentWorld::overlapsPeach(Actor* a) const{
     return collides(a->getX(), a->getY(), m_peach->getX(), m_peach->getY());
 }
 
-// If the y cooodinates of a and Peach are at least yDeltaLimit apart,
-// return false; otherwise, set xDeltaFromActor to the difference
-// between Peach's and a's x coordinates (positive means Peach is to
-// the right of a) and return true.
+//if the y cooodinates of a and Peach are at least yDeltaLimit apart, return false, otherwise, set xDeltaFromActor to the difference between Peach's and a's x coordinates (positive means Peach is to the right of a) and return true
 bool StudentWorld::getPeachTargetingInfo(Actor* a, int yDeltaLimit, int& xDeltaFromActor) const{
     if(abs(m_peach->getY() - a->getY()) >= yDeltaLimit)
         return false;
@@ -279,22 +258,33 @@ bool StudentWorld::getPeachTargetingInfo(Actor* a, int yDeltaLimit, int& xDeltaF
     return true;
 }
 
-// Grant Peach invincibility for this number of ticks.
+//grant Peach invincibility for this number of ticks
 void StudentWorld::grantInvincibility(int ticks) const{
     m_peach->gainInvincibility(ticks);
 }
 
-// Grant Peach Shoot Power.
+//grant Peach Shoot Power
 void StudentWorld::grantShootPower() const{
     m_peach->gainShootPower();
 }
 
-// Grant Peach Jump Power.
+//grant Peach Jump Power
 void StudentWorld::grantJumpPower() const{
     m_peach->gainJumpPower();
 }
 
-void StudentWorld::updateScoreText(){
+//takes two x and y positions of two Actors and determines if they overlap
+bool StudentWorld::collides(int x, int y, int x0, int y0) const{
+    int X = x + SPRITE_WIDTH - 1;
+    int Y = y + SPRITE_HEIGHT - 1;
+    int X0 = x0 + SPRITE_WIDTH - 1;
+    int Y0 = y0 + SPRITE_HEIGHT - 1;
+    
+    return x <= X0 && X >= x0 && y <= Y0 && Y >= y0;
+}
+
+//update the game text in this format: Lives: 3  Level: 01  Points: 000050 StarPower! ShootPower! JumpPower!
+void StudentWorld::updateGameText(){
     ostringstream oss;
     oss << "Lives: " << getLives();
     oss << "  Level: ";
@@ -312,6 +302,7 @@ void StudentWorld::updateScoreText(){
     setGameStatText(oss.str());
 }
 
+//converts grid position from the Level object to coordinates
 int StudentWorld::gridToCoord(int grid) const{
     return grid * VIEW_WIDTH / GRID_WIDTH;
 }

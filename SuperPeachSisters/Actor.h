@@ -278,7 +278,7 @@ class Piranha : public Enemy{
 public:
     //constructor and destructor
     Piranha(int startX, int startY, StudentWorld* sWP);
-    virtual ~Piranha(){}
+    virtual ~Piranha();
         
 private:
     virtual void doSomethingEnemyAux() override;
