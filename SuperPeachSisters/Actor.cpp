@@ -89,7 +89,7 @@ void Actor::convertDirectionAndDistanceToXY(int dir, int dist, int& destx, int& 
 //////////////////////////////////////////////////////////////////////////////
 
 //constructor
-Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP){
+Peach::Peach(int startX, int startY, StudentWorld* sWP) : Actor(IID_PEACH, startX, startY, sWP), m_hp(1){
     m_hp = 1;
     
     //tick-based variables
@@ -213,11 +213,11 @@ void Peach::doSomethingAux(){
                 //move left
             case KEY_PRESS_LEFT: //move left
                 setDirection(left);
-                sWP()->moveIfPossible(this, getX() - MOVEMENT_DISTANCE, getY());
+                sWP()->moveOrBonk(this, getX() - MOVEMENT_DISTANCE, getY());
                 break;
             case KEY_PRESS_RIGHT: //move right
                 setDirection(right);
-                sWP()->moveIfPossible(this, getX() + MOVEMENT_DISTANCE, getY());
+                sWP()->moveOrBonk(this, getX() + MOVEMENT_DISTANCE, getY());
                 break;
                 //jump
             case KEY_PRESS_UP: //jump if there's an obstacle below Peach
@@ -256,11 +256,12 @@ Obstacle::Obstacle(int imageID, int startX, int startY, StudentWorld* sWP) : Act
 //destructor
 Obstacle::~Obstacle(){}
 
-
+//behavior differentiator
 bool Obstacle::impedes() const{
     return true;
 }
 
+//empty function that allows instances of Blocks and Pipes to be instantiated/allocated
 void Obstacle::doSomethingAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
@@ -276,7 +277,7 @@ Block::Block(int startX, int startY, StudentWorld* sWP, GoodieType g) : Obstacle
 //destructor
 Block::~Block(){}
 
-//Block will do nothing if it has no power up inside of it, otherwise, spawn a power up
+//block will do nothing if it has no power up inside of it, otherwise, spawn a power up
 void Block::getBonked(bool bonkerIsInvinciblePeach){
     //if the Block has nothing or was bonked already, play the regular bonk sound and skip the rest of the steps
     if(m_g == none || m_wasBonked){
@@ -340,6 +341,7 @@ Goodie::Goodie(int imageID, int startX, int startY, StudentWorld* sWP) : Actor(i
 //destructor
 Goodie::~Goodie(){}
 
+//The goodie will either 
 void Goodie::doSomethingAux(){
     if(sWP()->overlapsPeach(this)){
         doSomethingGoodieAux();
@@ -411,7 +413,12 @@ void Star::doSomethingGoodieAux(){
 //////////////////////////////////////////////////////////////////////////////
 
 //constructor
-Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir, 1){}
+Projectile::Projectile(int imageID, int startX, int startY, StudentWorld* sWP, int dir) : Actor(imageID, startX, startY, sWP, dir, 1){
+    if(!sWP->isMovePossible(this, startX, startY)){
+        setDead();
+        return;
+    }
+}
 
 //destructor
 Projectile::~Projectile(){}
@@ -450,7 +457,6 @@ void PiranhaFireball::doSomethingProjectileAux(){
         setDead();
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 ///Peach Fireball Implementation
 //////////////////////////////////////////////////////////////////////////////
@@ -477,7 +483,8 @@ Shell::Shell(int startX, int startY, StudentWorld* sWP, int dir) : Projectile(II
 Shell::~Shell(){}
 
 void Shell::doSomethingProjectileAux(){
-    sWP()->damageOverlappingActor(this);
+    if(sWP()->damageOverlappingActor(this))
+        setDead();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -523,8 +530,6 @@ void Enemy::getBonked(bool bonkerIsInvinciblePeach){
 }
 
 void Enemy::sufferDamageIfDamageable(){
-    if(!isAlive())
-        return;
     sWP()->increaseScore(ENEMY_SCORE);
     doSomethingEnemyDeathAux();
     setDead();

@@ -188,7 +188,7 @@ void StudentWorld::endLevel(bool isGameWon){
 bool StudentWorld::moveOrBonk(Actor *a, int destx, int desty) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
-        if(collides(temp->getX(), temp->getY(), destx, desty)){
+        if(temp->impedes() && collides(temp->getX(), temp->getY(), destx, desty)){
             temp->getBonked(false);
             return false;
         }
@@ -253,7 +253,7 @@ bool StudentWorld::damageOverlappingPeach(Actor* damager) const{
 bool StudentWorld::damageOverlappingActor(Actor* damager) const{
     for(int i = 0; i < m_actors.size(); i++){
         Actor* temp = m_actors[i];
-        if(temp == damager || temp->projectileCanPassThrough())
+        if(temp == damager || temp->projectileCanPassThrough() || !temp->isAlive())
             continue;
         if(collides(temp->getX(), temp->getY(), damager->getX(), damager->getY())){
             temp->sufferDamageIfDamageable();
@@ -297,12 +297,12 @@ void StudentWorld::grantJumpPower() const{
 void StudentWorld::updateScoreText(){
     ostringstream oss;
     oss << "Lives: " << getLives();
-    oss << " Level: ";
+    oss << "  Level: ";
     oss.fill('0');
-    oss << setw(5) << getLevel();
-    oss << " Points: ";
+    oss << setw(2) << getLevel();
+    oss << "  Points: ";
     oss.fill('0');
-    oss << setw(5) << getScore();
+    oss << setw(6) << getScore();
     if(m_peach->isInvincible())
         oss << " StarPower!";
     if(m_peach->hasShootPower())
