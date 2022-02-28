@@ -112,7 +112,6 @@ public:
     virtual bool impedes() const override;
     
 private:
-    virtual void doSomethingAux() override;
 };
 
 class Block : public Obstacle{
@@ -124,9 +123,12 @@ public:
     Block(int startX, int startY, StudentWorld* sWP, GoodieType g = none);
     virtual ~Block();
 
-    virtual void getBonked(bool bonkerIsInvinciblePeach);
+    virtual void getBonked(bool bonkerIsInvinciblePeach) override;
     
 private:
+    virtual void doSomethingAux() override;
+
+    //private member variables
     GoodieType m_g;
     bool m_wasBonked;
 };
@@ -138,6 +140,7 @@ public:
     virtual ~Pipe();
     
 private:
+    virtual void doSomethingAux() override;
 };
 
 //Mario or Flag
@@ -245,7 +248,7 @@ public:
     virtual ~Enemy();
     
     void getBonked(bool bonkerIsInvinciblePeach) override;
-    virtual void sufferDamageIfDamageable() override;
+    void sufferDamageIfDamageable() override;
     
 private:
     virtual void doSomethingAux() override;

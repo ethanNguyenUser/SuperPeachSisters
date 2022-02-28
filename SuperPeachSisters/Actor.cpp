@@ -261,9 +261,6 @@ bool Obstacle::impedes() const{
     return true;
 }
 
-//empty function that allows instances of Blocks and Pipes to be instantiated/allocated
-void Obstacle::doSomethingAux(){}
-
 //////////////////////////////////////////////////////////////////////////////
 ///Block Implementation
 //////////////////////////////////////////////////////////////////////////////
@@ -296,6 +293,9 @@ void Block::getBonked(bool bonkerIsInvinciblePeach){
         sWP()->addActor(new Star(getX(), getY() + SPRITE_HEIGHT, sWP()));
 }
 
+//empty function that allows instances of Blocks to be instantiated/allocated
+void Block::doSomethingAux(){}
+
 //////////////////////////////////////////////////////////////////////////////
 ///Pipe Implementation
 //////////////////////////////////////////////////////////////////////////////
@@ -305,6 +305,9 @@ Pipe::Pipe(int startX, int startY, StudentWorld* sWP) : Obstacle(IID_PIPE, start
 
 //destructor
 Pipe::~Pipe(){}
+
+//empty function that allows instances of Pipes to be instantiated/allocated
+void Pipe::doSomethingAux(){}
 
 //////////////////////////////////////////////////////////////////////////////
 ///Objective Implementation
